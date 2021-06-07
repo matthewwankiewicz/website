@@ -45,14 +45,14 @@ output: blogdown::html_page
 </ul>
 <p>Now that the metrics we’re focusing on have been discussed, we can look at some plots to help visualize the data.</p>
 <div class="figure"><span id="fig:payroll"></span>
-<img src="{{< blogdown/postref >}}index_files/figure-html/payroll-1.png" alt="The increase in Payroll over the Years" width="672" />
+<img src="staticpayroll-1.png" alt="The increase in Payroll over the Years" width="672" />
 <p class="caption">
 Figure 1: The increase in Payroll over the Years
 </p>
 </div>
 <p>Figure <a href="#fig:payroll">1</a> shows us the increase in payroll over the years, starting at 1920 and ending at 2019. We see that up until 1960, payrolls were fairly constant but after the 60s we have seen a rapid increase in payroll. We can also see colours which represent if a team made the playoffs or not (light blue representing yes and dark blue meaning no). It is clear that in most seasons, teams that spend more make the playoffs. The salaries have been adjusted to represent the dollar in terms of what it would be in 2019 using inflation rates from the US Inflation Calculator (<span class="citation">(“US Inflation Calculator” <a href="#ref-citeUSINF">2020</a>)</span>). Clearly, the adjustment does not do much as we see that teams were likely just spending more compared to the past.</p>
 <div class="figure"><span id="fig:offense"></span>
-<img src="{{< blogdown/postref >}}index_files/figure-html/offense-1.png" alt="Relationship between Advanced Offense Metrics and Wins" width="672" />
+<img src="staticoffense-1.png" alt="Relationship between Advanced Offense Metrics and Wins" width="672" />
 <p class="caption">
 Figure 2: Relationship between Advanced Offense Metrics and Wins
 </p>
@@ -60,14 +60,14 @@ Figure 2: Relationship between Advanced Offense Metrics and Wins
 <p>Figure <a href="#fig:offense">2</a> shows the relationship between the offensive advanced metrics and the amount of teams a win gets, along with colours representing a team’s ability to make the playoffs. From the first graphs, we see that as wOBA increases, the amount of wins increases and the number of teams making the playoffs increases as well. We also see that there does not appear to be too much of a relationship between the number of wins a team gets and their strikeout rate. This makes sense because some teams are built on hitting home runs and strikeout a lot, versus teams who play more strategically and don’t hit the ball as hard.</p>
 <p>I have also added a green line at the amount of wins that teams generally make the playoffs. For teams that made the playoffs, they had an average of about 94 wins.</p>
 <div class="figure"><span id="fig:pitching"></span>
-<img src="{{< blogdown/postref >}}index_files/figure-html/pitching-1.png" alt="Relationship between Advanced Pitching Metrics and Wins" width="672" />
+<img src="staticpitching-1.png" alt="Relationship between Advanced Pitching Metrics and Wins" width="672" />
 <p class="caption">
 Figure 3: Relationship between Advanced Pitching Metrics and Wins
 </p>
 </div>
 <p>Figure <a href="#fig:pitching">3</a> shows the relationship between some advanced pitching metrics and the amount of wins a team gets in a season. We see that WHIP appears to have a very strong impact on wins and if a team can keep their WHIP as low as possible, they’re more likely to make the playoffs. It appears that FIP has the next strongest relationship with wins, better teams have lower FIPs. Lastly, it appears that BABIP against does have an impact on the amount of wins a team gets, just not as significant as FIP and WHIP. Once again, the green line represents the average amount of wins a playoff team gets.</p>
 <div class="figure"><span id="fig:wins"></span>
-<img src="{{< blogdown/postref >}}index_files/figure-html/wins-1.png" alt="Distribution of Wins for Lahman data" width="672" />
+<img src="staticwins-1.png" alt="Distribution of Wins for Lahman data" width="672" />
 <p class="caption">
 Figure 4: Distribution of Wins for Lahman data
 </p>
@@ -93,7 +93,7 @@ Figure 4: Distribution of Wins for Lahman data
 <p>Another option for a regression line would have been linear regression. In this case, instead of getting a probability, we would get a value (1 or 0). This type of regression would not work well when modelling a team’s ability to make the playoffs because the regression line would likely miss most of the data points.</p>
 <p>While logistic regression does work well for this scenario, there are some flaws that limit what we can do with it. Since logistic regression works for binary variables, we can only use variables that have yes or no answers, like “did a team make the playoffs?” This limits our analysis because it would be useful to determine if a team made the playoffs as the best team in the league or they just barely made it.</p>
 <div class="figure"><span id="fig:cooks"></span>
-<img src="{{< blogdown/postref >}}index_files/figure-html/cooks-1.png" alt="Cook's Distance for the Model" width="672" />
+<img src="staticcooks-1.png" alt="Cook's Distance for the Model" width="672" />
 <p class="caption">
 Figure 5: Cook’s Distance for the Model
 </p>
@@ -277,7 +277,7 @@ payroll_adj
 <p>From Equation 3 we can see that having a high FIP, WHIP, and oBABIP will lead to a lower chance of making the playoffs. But, if teams get a higher wOBA and SO_rate, they have a higher chance at making the playoffs.</p>
 <p>We can also see that using equation 3, the lowest possible probability of making the playoffs is <span class="math inline">\(2.73*10^{-6}\)</span> percent. This was calculated using the worst possible stats present in the data used. The highest possible probability of making the playoffs is 99.99 percent. This was taken from the maximum stats present in the data, and although it would be tough for a team like this to exist, there have been some teams that were close.</p>
 <div class="figure"><span id="fig:pvalues"></span>
-<img src="{{< blogdown/postref >}}index_files/figure-html/pvalues-1.png" alt="P-values of the terms of the regression equation" width="672" />
+<img src="staticpvalues-1.png" alt="P-values of the terms of the regression equation" width="672" />
 <p class="caption">
 Figure 6: P-values of the terms of the regression equation
 </p>

@@ -17,7 +17,7 @@ output: blogdown::html_page
 Code supporting this analysis can be found at: https://github.com/matthewwankiewicz/moneyball
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = F)
+knitr::opts_chunk$set(echo = F, fig.path = "static")
 knitr::opts_chunk$set(warning = F)
 #install.packages("tidyverse")
 library(tidyverse)
