@@ -1,0 +1,1815 @@
+---
+title: US Election Forecast
+author: Matthew Wankiewicz
+date: '2020-11-02'
+tags:
+  - logistic regression
+description: 'This is an election forecast I did with Alen Mitrovski and Xiaoyan Yang. It received an honourable mention from the Undergraduate Statistics Research Project competition'
+bibliography: references.bib
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+<script src="{{< blogdown/postref >}}index_files/kePrint/kePrint.js"></script>
+<link href="{{< blogdown/postref >}}index_files/lightable/lightable.css" rel="stylesheet" />
+
+
+<p><strong>Keywords</strong>: Forecasting, US 2020 Election, Trump, Biden, multilevel regression with post-stratification;</p>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>The 2020 United States presidential election will be on November 3rd, 2020 and once again, it is a battle between the Democrats and the Republicans. The Republican party is represented by the current president, Donald Trump who won the 2016 election against Hillary Clinton with a surprising come-from-behind victory. His success on election day has brought skepticism to American polling data as he was projected to lose by a wide margin up until the morning of the election. It will be interesting to see if this trend continues in the 2020 presidential election. Likewise, former vice-president, Joe Biden is representing the Democratic party. Joe Bidan served as the vice-president under former president Barack Obama during the years 2008-2016. His party will be looking to regain their control over the country after a polarizing four-year reign of president Trump. This year’s election is particularly interesting due to unforeseen circumstances of the COVID-19 pandemic and the civil unrest sparked by the killing of George Floyd. The US has the potential to go on to two very different pathways depending on who wins the election. Thus, it will be important to be aware of the possible scenarios that can occur on election day.</p>
+<p>For our report, we are using multilevel regression with post-stratification (MRP) to predict who will win the 2020 election. In short, MRP uses two different data set, creates a model using one and applies the results of the model on the larger data set. In our results, we look at which candidate won the popular vote (ie. had a higher percentage of votes). Also, we have calculated the total votes within each of the 50 American states to see how many points each candidate can accumulate for the electoral college. The electoral college is a system that was implemented in the United States to ensure that states with higher populations do not overwhelm the vote and provide greater power to individuals in historically smaller states (<span class="citation"><a href="#ref-west_2020" role="doc-biblioref">West</a> (<a href="#ref-west_2020" role="doc-biblioref">2020</a>)</span>). The presidential candidate with the most votes in a particular state wins all the electoral college votes for that state (<span class="citation"><a href="#ref-west_2020" role="doc-biblioref">West</a> (<a href="#ref-west_2020" role="doc-biblioref">2020</a>)</span>). The only exceptions to this rule are Nebraska and Maine who allocate their votes between both candidates based on the congressional district method (<span class="citation"><a href="#ref-west_2020" role="doc-biblioref">West</a> (<a href="#ref-west_2020" role="doc-biblioref">2020</a>)</span>). The electoral college has historically been viewed as a critical part of American democracy. However, its modern application has come into question in 2016 when Republican candidate Donald Trump won the election by accumulating the most electoral college votes despite losing the popular vote.</p>
+<p>The survey data for this study was obtained from the Democracy Fund Voter Study Group; an organization that took the collaborative efforts of many scholars and analysts to get a better understanding of the evolving behaviour of American voters (<span class="citation"><a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck</a> (<a href="#ref-citeVSG" role="doc-biblioref">2020</a>)</span>). The post-stratification data for this study was obtained from the Integrated Public Use Microdata Series (IPUMS). IPUMS is an organization that provides survey and census data through the collaboration of 105 national statistical agencies (<span class="citation"><a href="#ref-citeIPUMS" role="doc-biblioref">Ruggles et al.</a> (<a href="#ref-citeIPUMS" role="doc-biblioref">2020</a>)</span>). For this report, we utilized the data from the 2018 American Community Survey. We selected state, race, age, sex, education level and whether an individual was Hispanic or not as key variables to use for the post-stratification of the dataset.</p>
+<p>In our report, we have 4 sections, not including the introduction. In the first section, we look at the data used to carry out our report and have included some plots to help show the distribution of our demographics. In the next section, we begin to run our model and interpret what some of the values we obtain mean. Next, we display the results of our predictions, using tables, maps and plots. Lastly, we discuss our results and address some weaknesses that our report encountered. Our report is carried out using R (<span class="citation"><a href="#ref-citeR" role="doc-biblioref">R Core Team</a> (<a href="#ref-citeR" role="doc-biblioref">2019</a>)</span>), and the library <code>Tidyverse</code> (<span class="citation"><a href="#ref-citeTidyverse" role="doc-biblioref">Wickham et al.</a> (<a href="#ref-citeTidyverse" role="doc-biblioref">2019</a>)</span>) was used the most during the report. The report was then compiled using R markdown (<span class="citation"><a href="#ref-citermarkdown" role="doc-biblioref">Allaire et al.</a> (<a href="#ref-citermarkdown" role="doc-biblioref">2020</a>)</span>)</p>
+</div>
+<div id="data" class="section level1">
+<h1>Data</h1>
+<p>We utilized the U.S.presidential election 2020 survey data from Nationscape conducted on June 25, 2020, as the study data to predict the 2020 election winner between Trump and Biden. The census data from IPUMS America Census Service was used as the post-stratification data for the survey data weighting adjustment. In the following subsections, we will introduce the variable selection basis and the main data differences between the survey and the stratification data.</p>
+<p>According to the research (<span class="citation"><a href="#ref-1" role="doc-biblioref">PEW</a> (<a href="#ref-1" role="doc-biblioref">2020a</a>)</span>) released on August 13, 2020, there are stark differences in how registered voters who support Donald Trump and Joe Biden view the importance of top voting issues. Comparable shares of Biden supporters and Trump supporters view Foreign policy and Supreme Court appointments as very important issues. The top five voting issues from Trump supporters are economy (88%), violent crime (74%), immigration (61%), gun policy (57%), and foreign policy (57%). By contrast, the largest shares of Biden supporters view health care (84%), coronavirus outbreak (82%), and racial and ethnic inequality (76%) the top three voting issues. There are substantial differences between Trump and Biden supporters on the importance of most issues, the widest gaps are on climate change (57%) and racial and ethnic inequality (52%). Based on these facts, we selected age, gender, race, hispanic, education, and states as the explanatory variables in the model. A binary variable with values “Trump” or “Biden” was used as the respondent variable. The values were extracted from the survey variable <code>vote_2020</code>. The variable had 5 selections: “Donald trump,” “Joe Biden,” “I am not sure/don’t know,” “I would not vote,” and “Someone else.” We kept the data with “Trump” or “Biden” only and removed the remaining data with other selections.</p>
+<p>For our analysis, we decided to focus on 6 main demographics of respondents; gender, age, education level, hispanic, race and state.</p>
+<p>We decided to use age because seniors have been consistent voters and normally decide to vote Republicans. A recent survey from October reported that seniors were shifting to vote for the Democrats (<span class="citation"><a href="#ref-3" role="doc-biblioref">Frey</a> (<a href="#ref-3" role="doc-biblioref">2020</a>)</span>). Young people are also breaking tradition as it’s been reported that 51% of voters aged 18-34 said that they are very enthusiastic to vote (<span class="citation"><a href="#ref-2" role="doc-biblioref">Janfaza</a> (<a href="#ref-2" role="doc-biblioref">2020</a>)</span>). After looking at these numbers, we divided the age group into 4 categories: &lt;=35, 36-50, 51-65, and 65+.</p>
+<p>Next, we wanted to analyze gender because in the past, men had consistently held more conservative positions than women on a range of issues and as the parties became more ideological the gender gap kept growing from 8% in 1980 to 12% in 2000, to 13% in 2016, for women being more likely to vote for the Democrats <span class="citation">(<a href="#ref-pewexam" role="doc-biblioref">PEW 2018</a>)</span>. Since this trend has been occurring, we decided to see how that would hold up in our model.</p>
+<p>Next, we decided to focus on education level because of the 2016 election. White people with a four-year college degree or more education made up 30% of all validated voters. Among these voters, far more (55%) said they voted for Clinton than for Trump (38%). Also, the much larger group of white voters who had not completed college (44% of all voters), Trump won their vote by more than two-to-one(64% to 28%) <span class="citation">(<a href="#ref-12" role="doc-biblioref">CAWP 2020</a>)</span>. Given this information, we decided to use education and we grouped it into three categories: High school or lower, Post Secondary or Higher and some Post Secondary.</p>
+<p>We also focused on whether the respondent was hispanic or not. This variable was important in our opinions because of how Donald Trump has treated the hispanic community and how he claimed he was going to build a wall on the US-Mexico border in 2016. We also note that Professor Raul Madrid from the University of Texas said that the majority of hispanic people tend to vote Democrat (<span class="citation"><a href="#ref-11" role="doc-biblioref">Leon</a> (<a href="#ref-11" role="doc-biblioref">2020</a>)</span>) and we feel that could be crucial for our model. For this variable, we separated people into two groups: hispanic or not hispanic.</p>
+<p>We also want to look at race to see if that had any influence. Race is another important category to analyze because usually, people of a certain race will be more connected to a candidate, such as this year, many people of African-American descent are planning to vote for Joe Biden because of the hateful actions Donald Trump has made. Our race variable has been grouped into 4 categories: White, Black, Asian or other.</p>
+<p>Lastly, we wanted to look at states because there are some states which consistently vote Republican or Democratic and they are important to take into account for our model. Generally, the east and west coasts tend to vote Democrat and the mid-west and south tend to vote Republican. We wanted to see if this same trend is going to occur in 2020.</p>
+<div id="survey-data" class="section level2">
+<h2>Survey Data</h2>
+<p>The survey data was provided by Nationscape. Nationscape is a featured project of the Democracy Fund Voter Study Group. Democracy Fund + UCLA Nationscape is one of the largest public opinion surveys ever conducted - interviewing people in nearly every county, congressional district, and mid-sized U.S. city in the leadup to the 2020 election <span class="citation">(<a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck 2020</a>)</span>. Data collection is performed by LUCID, Inc., which collaborated with Nationscape personnel on aspects of the study’s design, sampling plan, and feasibility. Nationscape is a 16-month election study conducted by researchers at UCLA.</p>
+<p>Samples are collected using stratified sampling. Nationscape groups potential respondents by demographics like age, gender and race and try to make their results correlate with the census data by using weights on the responses (<span class="citation"><a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck</a> (<a href="#ref-citeVSG" role="doc-biblioref">2020</a>)</span>).</p>
+<p>The population of the survey is people that live in the United States. The frame of the survey were Americans placed into sub-groups based on certain demographics. The sample of the survey were the people who responded to the survey and completed it properly. The surveys started in July of 2019 and will conclude in January of 2021. It includes interviews with roughly 6,250 people with completed surveys per week <span class="citation">(<a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck 2020</a>)</span>. Interviews are conducted online wherever the respondent has access to a networked computer or mobile device.</p>
+<p>To make sure results are as accurate as possible, the weekly questionnaires are designed for a 15-minute administration time. On average across all surveys, roughly 12% decline immediately. Another 5% or so drop off elsewhere in the survey. Nationscape removes about 8% for speeding or straight-lining through the survey. Speeding is defined as completing the survey in fewer than 6 minutes and straight-lining as selecting the same response for every question in the three policy questions <span class="citation">(<a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck 2020</a>)</span>. Nationscape samples are provided by Lucid, a market research platform that runs an online exchange for survey respondents. The samples were drawn from this exchange match a set of demographic quotas on age, gender, ethnicity, region, income, and education. The survey data are then weighted to be representative of the American population. One set of weights is generated for each week’s survey. The targets to which Nationscape is weighted are derived from the adult population of the 2017 American Community Survey of the U.S. Census Bureau<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> <span class="citation">(<a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck 2020</a>)</span>. Nationscape uses the most recent census source available, their source is usually a year old or more. It may not reflect the existing population.</p>
+<p>The Nationscape survey is useful because of how results are collected. As seen above, they make sure that responses are given accurately and make sure people take their time to complete their responses. This is extremely useful. After all, it means that most of the responses will be as accurate as possible because people that rush to fill in incorrect responses won’t be included which gives us a strong set of data.</p>
+<p>The survey does encounter some weaknesses though. The major weakness it encounters is that the survey data can be prone to sampling bias. Since the counties and cities are randomly selected, the city selected could have had a more republican or democratic leaning population. Since they could be sampling high proportions of supporters for one party, the results for that city or even that state could be skewed.</p>
+<p>The survey data from June 25, 2020, was selected as the study data. It had 6479 responses and 265 variables. The survey was designed to cover age, gender, race, education, religion, remarks on Trump’s performance in his first term, economy, propensity to the major political parties, their leaders, or candidates, ethnicity inequality, gun policy/issues, environment issues, green energy, health care/insurance, income tax, college tuition, abortion, international trade, immigration, legalizing marijuana, and COVID-19 pandemic (<span class="citation"><a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck</a> (<a href="#ref-citeVSG" role="doc-biblioref">2020</a>)</span>). Our goal is to select variables that can explain and predict the winner of the U.S. presidential election 2020 by applying a logistic multilevel regression model. It is crucial to understand the most important voting issues, especially the differences between Trump and Biden’s supporters, and hence the selected variables must have the power to distinguish the two camps.</p>
+</div>
+<div id="post-stratification-data" class="section level2">
+<h2>Post-Stratification Data</h2>
+<p>The U.S. IPUMS America Census Service (ACS) is a project of the U.S. Census Bureau that has replaced the decennial census as the key source of information about the American population and housing characteristics <span class="citation">(<a href="#ref-citeIPUMS" role="doc-biblioref">Ruggles et al. 2020</a>)</span>. The IPUMS database contains the annual samples from the 2000-2018 ACS <span class="citation">(<a href="#ref-citeIPUMS" role="doc-biblioref">Ruggles et al. 2020</a>)</span>. We selected the most recent ACS 2018 data as the post-stratification data set.</p>
+<p>The ACS data is collected through cluster samples, in other words, using stratified sampling. Stratified sampling is a method of sampling where the population is broken down into smaller sub-groups and then those subgroups are sampled and their responses are collected. For IPUMS, the population for their sample was the entire US population. The sampling frame is Americans who have completed the census. While the sample was taken every 1 in 100 persons on a national level.</p>
+<p>IPUMS breaks down samples into households or dwellings as opposed to individuals because some topics require information from multiple people (<span class="citation"><a href="#ref-citeIPUMS" role="doc-biblioref">Ruggles et al.</a> (<a href="#ref-citeIPUMS" role="doc-biblioref">2020</a>)</span>). When the data is collected, samples are stratified based on certain characteristics into groups, and then they are sampled from those groups. Some variables that respondents are stratified by are geography, household size, and race.</p>
+<p>Some strengths of the survey include how many people they can reach, and how accurate their data is. The sample that we used for our results was about 2.5 million people but IPUMS has access to more than that amount. This is useful because it allows us to get a really strong picture of the population. After all, we can observe trends in certain groups. The accuracy is also a strength because we know that we apply the results to the whole population. IPUMS uses a number called “design factor” which analyzes the errors in observed data vs sampled data and most of their results are around 1 which means the results are almost identical (<span class="citation"><a href="#ref-citeIPUMS" role="doc-biblioref">Ruggles et al.</a> (<a href="#ref-citeIPUMS" role="doc-biblioref">2020</a>)</span>).</p>
+<p>One major weakness that the IPUMS data encounters is that it is prone to people submitting fake results. When cleaning our data we encountered many observations where 2-year-olds were making millions of dollars. This is an issue that is annoying but simple to fix, as we can just filter out the fake responses and focus on the correct ones. The difficult issue is that sometimes we cannot be sure which data is real or fake, there are some obvious ones like children being millionaires but other incorrect responses just have to be kept in the data.</p>
+<p>According to their website, IPUMS says, “Non respondents are contacted via telephone for a computer-assisted telephone interview (CATI) one month later. One-third of the non respondents to the mail or telephone survey are contacted in person for a computer-assisted personal interview (CAPI) one month following the CATI attempt” (<span class="citation"><a href="#ref-citeIPUMS" role="doc-biblioref">Ruggles et al.</a> (<a href="#ref-citeIPUMS" role="doc-biblioref">2020</a>)</span>). This means that IPUMS ensures that they keep track of non-respondents and encourage them to complete their surveys.</p>
+<p>The post-stratification has about 2.5 million records. To maintain unity with the survey data, we selected age, gender, race, hispanic, education as the target variables. We cleaned and regrouped these variables to align with the survey data. Figures <a href="#fig:data1">1</a> and <a href="#fig:data2">2</a> show the corresponding variable comparisons between the survey and the post-stratification data. The solid line and dotted line represents the survey and the post-stratification data, respectively.</p>
+<div class="figure"><span style="display:block;" id="fig:data1"></span>
+<img src="{{< blogdown/postref >}}index_files/figure-html/data1-1.png" alt="Demographics of Sample and Population" width="672" />
+<p class="caption">
+Figure 1: Demographics of Sample and Population
+</p>
+</div>
+<p>Figure <a href="#fig:data1">1</a> show us the voter demographics from the VSG data (<span class="citation"><a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck</a> (<a href="#ref-citeVSG" role="doc-biblioref">2020</a>)</span>) vs the ACS data (<span class="citation"><a href="#ref-citeIPUMS" role="doc-biblioref">Ruggles et al.</a> (<a href="#ref-citeIPUMS" role="doc-biblioref">2020</a>)</span>). For the most part, we see from Figure <a href="#fig:data1">1</a> that the polling data matches up with our post-stratification data. The major differences present are that more respondents were Asian and less were other in the post-stratification data compared to the polling data. We also see that ages are slightly different as well, the polling data appeared to collect more responses from younger people while the post-stratification data had a roughly even distribution.</p>
+<div class="figure"><span style="display:block;" id="fig:data2"></span>
+<img src="{{< blogdown/postref >}}index_files/figure-html/data2-1.png" alt="More Demographics of Sample and Population" width="672" />
+<p class="caption">
+Figure 2: More Demographics of Sample and Population
+</p>
+</div>
+<p>Figure <a href="#fig:data2">2</a> shows us more of the voter demographics from the VSG data (<span class="citation"><a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck</a> (<a href="#ref-citeVSG" role="doc-biblioref">2020</a>)</span>) vs the ACS data (<span class="citation"><a href="#ref-citeIPUMS" role="doc-biblioref">Ruggles et al.</a> (<a href="#ref-citeIPUMS" role="doc-biblioref">2020</a>)</span>). We can see that the polling data has more Post-Secondary graduates and less High School graduates compared to the post-stratification data. It also illustrates the population distributions by states. Overall, the curves present very similar patterns. In most states, the weights are very close. The noticeable gaps are in Florida, New York, and Texas. The survey data over-represents the proportions of respondents in Florida and New York by 1.5% and 2.8% respectively. In Texas, the survey data under-represents the population by 1.1% compared with the post-stratification data.</p>
+<p>Table <a href="#tab:pollingprops">1</a> shows the proportion of decided voters who plan to vote for Donald Trump or Joe Biden. The data used to create this table is from the Voter Study Group (<span class="citation"><a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck</a> (<a href="#ref-citeVSG" role="doc-biblioref">2020</a>)</span>). We see that Joe Biden is expected to win the popular vote before we implement the model.</p>
+<p>In general, by comparing with the survey data and the post-stratification data, the largest gap is in education variables. Age ranks the second one. The other variables do not show a large percentage of discrepancies between the two data sets. The post-stratification method is applied to make the survey results more representative for the whole population.</p>
+<table>
+<caption>
+<span id="tab:pollingprops">Table 1: </span>Who decided voters plan to support (Polling Data)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Candidate
+</th>
+<th style="text-align:right;">
+Number of Respondents
+</th>
+<th style="text-align:right;">
+Proportion (%)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Donald Trump
+</td>
+<td style="text-align:right;">
+2481
+</td>
+<td style="text-align:right;">
+48
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Joe Biden
+</td>
+<td style="text-align:right;">
+2719
+</td>
+<td style="text-align:right;">
+52
+</td>
+</tr>
+</tbody>
+</table>
+<div class="figure"><span style="display:block;" id="fig:pollmap"></span>
+<img src="{{< blogdown/postref >}}index_files/figure-html/pollmap-1.png" alt="Proportion of voters choosing Biden from Polling Data" width="672" />
+<p class="caption">
+Figure 3: Proportion of voters choosing Biden from Polling Data
+</p>
+</div>
+<p>Figure <a href="#fig:pollmap">3</a> shows the proportion of voters from each state who plan to vote for Joe Biden, this is using the polling data. We see that the east coast favours Biden much more than the mid-west does which is normal. We also see that Florida and Georgia are both on the fence on who they plan to vote for and could potentially be favouring Biden. This is significant because the last time that Georgia voted for the Democratic party was in 1992 (<span class="citation"><a href="#ref-georgia" role="doc-biblioref">Britannica</a> (<a href="#ref-georgia" role="doc-biblioref">2020</a>)</span>), showing a major shift to the blue.</p>
+</div>
+</div>
+<div id="model" class="section level1">
+<h1>Model</h1>
+<p>For our analysis, we plan to use multilevel regression with post-stratification. Multilevel regression with post-stratification (MRP) is a type of analysis where we fit a model using a smaller data set, in this case, our polling data and then use the results of the model to apply it to a larger population.</p>
+<p>The main steps for MRP are: Find the data set you want to use to create your model. For our scenario, we used the polling data from the Voter Study Group (<span class="citation"><a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck</a> (<a href="#ref-citeVSG" role="doc-biblioref">2020</a>)</span>). Next, you must create a model using your smaller sample. We used logistic regression and the data used was the polling data. Our equation takes the form of equation <a href="#eq:logit">(1)</a>, as seen below. Once you have your model, you must apply it to your larger data set to give an idea of the population. For our report, we used the Census data from IPUMS (<span class="citation"><a href="#ref-citeIPUMS" role="doc-biblioref">Ruggles et al.</a> (<a href="#ref-citeIPUMS" role="doc-biblioref">2020</a>)</span>).</p>
+<p>MRP is extremely useful not only because of how simple it is but also because it allows us to estimate the preferences of a population using individual responses from surveys. Also, as Kennedy and Gelman discuss in their paper “Know your population and know your model: Using model-based regression and post-stratification to generalize findings beyond the observed sample,” MRP works best when you have a population and variables of interest and want to apply these variables using two data sets with different characteristics (<span class="citation"><a href="#ref-kennedy_gelman" role="doc-biblioref">Kennedy and Gelman</a> (<a href="#ref-kennedy_gelman" role="doc-biblioref">n.d.</a>)</span>). Lastly, concerning surveys, since you only use one survey to create your model, you don’t encounter issues with having to have multiple surveys for each region/state and lets under-sampled populations to be represented through post-stratification.</p>
+<p>MRP does encounter some weaknesses as well. Once again we can look to Kennedy and Gelman’s paper where they say that MRP is dependent on how accurate the model is (<span class="citation"><a href="#ref-kennedy_gelman" role="doc-biblioref">Kennedy and Gelman</a> (<a href="#ref-kennedy_gelman" role="doc-biblioref">n.d.</a>)</span>). If the generated model makes incorrect predictions or assumptions, your post-stratification will be incorrect and will hurt your results.</p>
+<p>To predict whether or not a person plans to vote for Joe Biden or Donald Trump, we plan to build a logistic regression model using data from the Voter Study Group (<span class="citation"><a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck</a> (<a href="#ref-citeVSG" role="doc-biblioref">2020</a>)</span>) and then post-stratify it using Census Data (<span class="citation"><a href="#ref-citeIPUMS" role="doc-biblioref">Ruggles et al.</a> (<a href="#ref-citeIPUMS" role="doc-biblioref">2020</a>)</span>). Since logistic regression only works for binary response variables, we created a variable called <code>vote_biden</code> which returns a 1 if the respondent plans to vote for Joe Biden and a 0 if they plan to vote for Donald Trump.</p>
+<p>The logistic regression model takes the form of:</p>
+<p><span class="math display" id="eq:logit">\[\begin{equation} 
+  log(\frac{\hat{p}}{1 - \hat{p}}) = \beta_{0} + \beta_{1}x_{sex} + 
+\beta_{2}x_{agegroup} + \beta_{3}x_{race} + \beta_{4}x_{state} + \beta_{5}x_{education} + \beta_{6}x_{hispanic}
+  \tag{1}
+\end{equation}\]</span></p>
+<p>Once we have our regression model, we will use the <code>predict</code> function in R (<span class="citation"><a href="#ref-citeR" role="doc-biblioref">R Core Team</a> (<a href="#ref-citeR" role="doc-biblioref">2019</a>)</span>), to apply our model to the Census data (<span class="citation"><a href="#ref-citeIPUMS" role="doc-biblioref">Ruggles et al.</a> (<a href="#ref-citeIPUMS" role="doc-biblioref">2020</a>)</span>). We do this by grouping the Census data by the demographics we plan to analyze (sex, race, age, education level, hispanic or not, state), and then applying the model to each of those groups. After applying the model, we will receive probabilities that a person in that group will vote for Joe Biden. Once the predictions are complete, we can use them to find out who will win the popular vote or how many electoral colleges a candidate will win. We also can use a 95 percent confidence interval, which means that we are 95 percent certain that the true value for the population (in this case popular vote percentage), is within the range we obtain. From this, we can also conclude that our results will be accurate between +/- 4%.</p>
+<p>In equation <a href="#eq:logit">(1)</a>, each <span class="math inline">\(\beta\)</span> represents a coefficient that the regression model will compute for us. As for our variables, we have chosen to use sex, age, race, education, state, and whether the respondent is hispanic. We decided to use the first 3 because they are generally strong predictors of which candidate a person would support, such as how some states tend to vote republican year after year while some states flip between democratic and republican almost every election. We also included education level, initially we were going to include income but decided that education level is more concrete on describing a person, as opposed to income. Lastly, we wanted to focus on whether the respondent was hispanic and if so, where they were from. This variable was important for our predictions because we know how poorly Donald Trump has spoken of hispanic people and we believe they could have a strong impact on the election.</p>
+<p>The output of the logistic regression model will give us a probability of whether or not a voter plans to vote for Joe Biden or not. To find this probability, we take the sum of the right side of equation <a href="#eq:logit">(1)</a> and plug it into the equation below:</p>
+<p><span class="math display" id="eq:prob">\[\begin{equation} 
+  \frac{e^{sum}}{1+e^{sum}}
+  \tag{2}
+\end{equation}\]</span></p>
+<p>Equation <a href="#eq:prob">(2)</a> is just a manipulation of equation <a href="#eq:logit">(1)</a>, where <span class="math inline">\(e\)</span> is the exponential equation and <span class="math inline">\(sum\)</span> is the sum of the right side of equation <a href="#eq:logit">(1)</a>. We see that as the sum of the right side increases, the probability that a person will vote for Joe Biden increases as well.
+We are running our regression model using the <code>glm()</code> function in R (<span class="citation"><a href="#ref-citeR" role="doc-biblioref">R Core Team</a> (<a href="#ref-citeR" role="doc-biblioref">2019</a>)</span>). The decision to run this model over other models like linear regression was made by the fact that we were predicting a binary variable about a voter’s decision. Since there are only two possible options our data will likely follow an S shape and a straight line equation will not be helpful to model this relationship. Another strength present for logistic regression is that when combined with post-stratification it allows us to take information from under-represented populations and it allows their views to be accounted for more greatly. For example, our polling data (<span class="citation"><a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck</a> (<a href="#ref-citeVSG" role="doc-biblioref">2020</a>)</span>), includes only 2 observations from Wyoming, but using multilevel regression with post-stratification, we can have that expanded to over 3000 people!</p>
+<p>Our model does have some weaknesses, since the output must be binary, we cannot account for other candidates or a person deciding not to vote. This issue isn’t too large because our main goal is to determine which of the two main candidates will be chosen by the people of America. Another weakness we do encounter with our model and multi-level regression with post-stratification is that it has a strong dependence on the survey data. This is a weakness because if the survey has any gaps or there are any tweaks we need to make, it can change the course of results.</p>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:model">Table 2: </span>Coefficients from the Model
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+term
+</th>
+<th style="text-align:right;">
+estimate
+</th>
+<th style="text-align:right;">
+std.error
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+<th style="text-align:right;">
+conf.low
+</th>
+<th style="text-align:right;">
+conf.high
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:right;">
+0.90
+</td>
+<td style="text-align:right;">
+0.31
+</td>
+<td style="text-align:right;">
+2.87
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.28
+</td>
+<td style="text-align:right;">
+1.51
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sexmale
+</td>
+<td style="text-align:right;">
+-0.46
+</td>
+<td style="text-align:right;">
+0.06
+</td>
+<td style="text-align:right;">
+-7.52
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+-0.58
+</td>
+<td style="text-align:right;">
+-0.34
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+age_groups36-49
+</td>
+<td style="text-align:right;">
+-0.44
+</td>
+<td style="text-align:right;">
+0.08
+</td>
+<td style="text-align:right;">
+-5.47
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+-0.60
+</td>
+<td style="text-align:right;">
+-0.28
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+age_groups50-65
+</td>
+<td style="text-align:right;">
+-0.37
+</td>
+<td style="text-align:right;">
+0.08
+</td>
+<td style="text-align:right;">
+-4.42
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+-0.54
+</td>
+<td style="text-align:right;">
+-0.21
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+age_groups65+
+</td>
+<td style="text-align:right;">
+-0.27
+</td>
+<td style="text-align:right;">
+0.10
+</td>
+<td style="text-align:right;">
+-2.78
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+<td style="text-align:right;">
+-0.45
+</td>
+<td style="text-align:right;">
+-0.08
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+racesblack
+</td>
+<td style="text-align:right;">
+1.48
+</td>
+<td style="text-align:right;">
+0.20
+</td>
+<td style="text-align:right;">
+7.55
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1.10
+</td>
+<td style="text-align:right;">
+1.87
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+racesother race, nec
+</td>
+<td style="text-align:right;">
+-0.41
+</td>
+<td style="text-align:right;">
+0.19
+</td>
+<td style="text-align:right;">
+-2.17
+</td>
+<td style="text-align:right;">
+0.03
+</td>
+<td style="text-align:right;">
+-0.78
+</td>
+<td style="text-align:right;">
+-0.04
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+raceswhite
+</td>
+<td style="text-align:right;">
+-0.81
+</td>
+<td style="text-align:right;">
+0.15
+</td>
+<td style="text-align:right;">
+-5.43
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+-1.11
+</td>
+<td style="text-align:right;">
+-0.52
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpalaska
+</td>
+<td style="text-align:right;">
+-0.28
+</td>
+<td style="text-align:right;">
+0.91
+</td>
+<td style="text-align:right;">
+-0.31
+</td>
+<td style="text-align:right;">
+0.76
+</td>
+<td style="text-align:right;">
+-2.32
+</td>
+<td style="text-align:right;">
+1.45
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicparizona
+</td>
+<td style="text-align:right;">
+0.22
+</td>
+<td style="text-align:right;">
+0.32
+</td>
+<td style="text-align:right;">
+0.68
+</td>
+<td style="text-align:right;">
+0.50
+</td>
+<td style="text-align:right;">
+-0.41
+</td>
+<td style="text-align:right;">
+0.84
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicparkansas
+</td>
+<td style="text-align:right;">
+-0.51
+</td>
+<td style="text-align:right;">
+0.45
+</td>
+<td style="text-align:right;">
+-1.13
+</td>
+<td style="text-align:right;">
+0.26
+</td>
+<td style="text-align:right;">
+-1.43
+</td>
+<td style="text-align:right;">
+0.36
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpcalifornia
+</td>
+<td style="text-align:right;">
+0.72
+</td>
+<td style="text-align:right;">
+0.28
+</td>
+<td style="text-align:right;">
+2.60
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+<td style="text-align:right;">
+0.18
+</td>
+<td style="text-align:right;">
+1.26
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpcolorado
+</td>
+<td style="text-align:right;">
+0.32
+</td>
+<td style="text-align:right;">
+0.35
+</td>
+<td style="text-align:right;">
+0.91
+</td>
+<td style="text-align:right;">
+0.36
+</td>
+<td style="text-align:right;">
+-0.37
+</td>
+<td style="text-align:right;">
+1.01
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpconnecticut
+</td>
+<td style="text-align:right;">
+1.42
+</td>
+<td style="text-align:right;">
+0.40
+</td>
+<td style="text-align:right;">
+3.53
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.64
+</td>
+<td style="text-align:right;">
+2.23
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpdelaware
+</td>
+<td style="text-align:right;">
+1.02
+</td>
+<td style="text-align:right;">
+0.51
+</td>
+<td style="text-align:right;">
+2.01
+</td>
+<td style="text-align:right;">
+0.04
+</td>
+<td style="text-align:right;">
+0.03
+</td>
+<td style="text-align:right;">
+2.05
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpdistrict of columbia
+</td>
+<td style="text-align:right;">
+0.89
+</td>
+<td style="text-align:right;">
+0.56
+</td>
+<td style="text-align:right;">
+1.59
+</td>
+<td style="text-align:right;">
+0.11
+</td>
+<td style="text-align:right;">
+-0.19
+</td>
+<td style="text-align:right;">
+2.04
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpflorida
+</td>
+<td style="text-align:right;">
+0.29
+</td>
+<td style="text-align:right;">
+0.28
+</td>
+<td style="text-align:right;">
+1.04
+</td>
+<td style="text-align:right;">
+0.30
+</td>
+<td style="text-align:right;">
+-0.25
+</td>
+<td style="text-align:right;">
+0.85
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpgeorgia
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+<td style="text-align:right;">
+0.32
+</td>
+<td style="text-align:right;">
+0.05
+</td>
+<td style="text-align:right;">
+0.96
+</td>
+<td style="text-align:right;">
+-0.60
+</td>
+<td style="text-align:right;">
+0.64
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicphawaii
+</td>
+<td style="text-align:right;">
+0.57
+</td>
+<td style="text-align:right;">
+0.51
+</td>
+<td style="text-align:right;">
+1.12
+</td>
+<td style="text-align:right;">
+0.26
+</td>
+<td style="text-align:right;">
+-0.41
+</td>
+<td style="text-align:right;">
+1.59
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpidaho
+</td>
+<td style="text-align:right;">
+-0.18
+</td>
+<td style="text-align:right;">
+0.52
+</td>
+<td style="text-align:right;">
+-0.36
+</td>
+<td style="text-align:right;">
+0.72
+</td>
+<td style="text-align:right;">
+-1.24
+</td>
+<td style="text-align:right;">
+0.81
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpillinois
+</td>
+<td style="text-align:right;">
+0.57
+</td>
+<td style="text-align:right;">
+0.29
+</td>
+<td style="text-align:right;">
+1.94
+</td>
+<td style="text-align:right;">
+0.05
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1.15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpindiana
+</td>
+<td style="text-align:right;">
+0.34
+</td>
+<td style="text-align:right;">
+0.34
+</td>
+<td style="text-align:right;">
+1.01
+</td>
+<td style="text-align:right;">
+0.31
+</td>
+<td style="text-align:right;">
+-0.32
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpiowa
+</td>
+<td style="text-align:right;">
+0.61
+</td>
+<td style="text-align:right;">
+0.40
+</td>
+<td style="text-align:right;">
+1.53
+</td>
+<td style="text-align:right;">
+0.13
+</td>
+<td style="text-align:right;">
+-0.17
+</td>
+<td style="text-align:right;">
+1.40
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpkansas
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.43
+</td>
+<td style="text-align:right;">
+-0.01
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:right;">
+-0.85
+</td>
+<td style="text-align:right;">
+0.83
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpkentucky
+</td>
+<td style="text-align:right;">
+0.39
+</td>
+<td style="text-align:right;">
+0.35
+</td>
+<td style="text-align:right;">
+1.14
+</td>
+<td style="text-align:right;">
+0.26
+</td>
+<td style="text-align:right;">
+-0.28
+</td>
+<td style="text-align:right;">
+1.08
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicplouisiana
+</td>
+<td style="text-align:right;">
+0.20
+</td>
+<td style="text-align:right;">
+0.37
+</td>
+<td style="text-align:right;">
+0.55
+</td>
+<td style="text-align:right;">
+0.58
+</td>
+<td style="text-align:right;">
+-0.52
+</td>
+<td style="text-align:right;">
+0.93
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpmaine
+</td>
+<td style="text-align:right;">
+0.94
+</td>
+<td style="text-align:right;">
+0.55
+</td>
+<td style="text-align:right;">
+1.72
+</td>
+<td style="text-align:right;">
+0.09
+</td>
+<td style="text-align:right;">
+-0.13
+</td>
+<td style="text-align:right;">
+2.04
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpmaryland
+</td>
+<td style="text-align:right;">
+0.47
+</td>
+<td style="text-align:right;">
+0.35
+</td>
+<td style="text-align:right;">
+1.33
+</td>
+<td style="text-align:right;">
+0.18
+</td>
+<td style="text-align:right;">
+-0.22
+</td>
+<td style="text-align:right;">
+1.17
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpmassachusetts
+</td>
+<td style="text-align:right;">
+1.20
+</td>
+<td style="text-align:right;">
+0.35
+</td>
+<td style="text-align:right;">
+3.42
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.52
+</td>
+<td style="text-align:right;">
+1.90
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpmichigan
+</td>
+<td style="text-align:right;">
+0.69
+</td>
+<td style="text-align:right;">
+0.31
+</td>
+<td style="text-align:right;">
+2.22
+</td>
+<td style="text-align:right;">
+0.03
+</td>
+<td style="text-align:right;">
+0.09
+</td>
+<td style="text-align:right;">
+1.31
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpminnesota
+</td>
+<td style="text-align:right;">
+0.55
+</td>
+<td style="text-align:right;">
+0.36
+</td>
+<td style="text-align:right;">
+1.53
+</td>
+<td style="text-align:right;">
+0.13
+</td>
+<td style="text-align:right;">
+-0.15
+</td>
+<td style="text-align:right;">
+1.27
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpmississippi
+</td>
+<td style="text-align:right;">
+-0.29
+</td>
+<td style="text-align:right;">
+0.46
+</td>
+<td style="text-align:right;">
+-0.64
+</td>
+<td style="text-align:right;">
+0.52
+</td>
+<td style="text-align:right;">
+-1.19
+</td>
+<td style="text-align:right;">
+0.61
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpmissouri
+</td>
+<td style="text-align:right;">
+0.48
+</td>
+<td style="text-align:right;">
+0.34
+</td>
+<td style="text-align:right;">
+1.42
+</td>
+<td style="text-align:right;">
+0.16
+</td>
+<td style="text-align:right;">
+-0.18
+</td>
+<td style="text-align:right;">
+1.14
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpmontana
+</td>
+<td style="text-align:right;">
+0.41
+</td>
+<td style="text-align:right;">
+0.58
+</td>
+<td style="text-align:right;">
+0.71
+</td>
+<td style="text-align:right;">
+0.48
+</td>
+<td style="text-align:right;">
+-0.75
+</td>
+<td style="text-align:right;">
+1.56
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpnebraska
+</td>
+<td style="text-align:right;">
+0.34
+</td>
+<td style="text-align:right;">
+0.57
+</td>
+<td style="text-align:right;">
+0.59
+</td>
+<td style="text-align:right;">
+0.55
+</td>
+<td style="text-align:right;">
+-0.80
+</td>
+<td style="text-align:right;">
+1.45
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpnevada
+</td>
+<td style="text-align:right;">
+0.11
+</td>
+<td style="text-align:right;">
+0.38
+</td>
+<td style="text-align:right;">
+0.30
+</td>
+<td style="text-align:right;">
+0.77
+</td>
+<td style="text-align:right;">
+-0.63
+</td>
+<td style="text-align:right;">
+0.86
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpnew hampshire
+</td>
+<td style="text-align:right;">
+0.68
+</td>
+<td style="text-align:right;">
+0.57
+</td>
+<td style="text-align:right;">
+1.19
+</td>
+<td style="text-align:right;">
+0.24
+</td>
+<td style="text-align:right;">
+-0.46
+</td>
+<td style="text-align:right;">
+1.82
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpnew jersey
+</td>
+<td style="text-align:right;">
+0.43
+</td>
+<td style="text-align:right;">
+0.31
+</td>
+<td style="text-align:right;">
+1.40
+</td>
+<td style="text-align:right;">
+0.16
+</td>
+<td style="text-align:right;">
+-0.17
+</td>
+<td style="text-align:right;">
+1.04
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpnew mexico
+</td>
+<td style="text-align:right;">
+1.12
+</td>
+<td style="text-align:right;">
+0.57
+</td>
+<td style="text-align:right;">
+1.96
+</td>
+<td style="text-align:right;">
+0.05
+</td>
+<td style="text-align:right;">
+0.03
+</td>
+<td style="text-align:right;">
+2.29
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpnew york
+</td>
+<td style="text-align:right;">
+0.55
+</td>
+<td style="text-align:right;">
+0.28
+</td>
+<td style="text-align:right;">
+1.96
+</td>
+<td style="text-align:right;">
+0.05
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1.10
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpnorth carolina
+</td>
+<td style="text-align:right;">
+0.38
+</td>
+<td style="text-align:right;">
+0.30
+</td>
+<td style="text-align:right;">
+1.24
+</td>
+<td style="text-align:right;">
+0.22
+</td>
+<td style="text-align:right;">
+-0.22
+</td>
+<td style="text-align:right;">
+0.98
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpnorth dakota
+</td>
+<td style="text-align:right;">
+-0.60
+</td>
+<td style="text-align:right;">
+1.20
+</td>
+<td style="text-align:right;">
+-0.50
+</td>
+<td style="text-align:right;">
+0.62
+</td>
+<td style="text-align:right;">
+-3.66
+</td>
+<td style="text-align:right;">
+1.56
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpohio
+</td>
+<td style="text-align:right;">
+0.42
+</td>
+<td style="text-align:right;">
+0.29
+</td>
+<td style="text-align:right;">
+1.43
+</td>
+<td style="text-align:right;">
+0.15
+</td>
+<td style="text-align:right;">
+-0.15
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpoklahoma
+</td>
+<td style="text-align:right;">
+-0.01
+</td>
+<td style="text-align:right;">
+0.40
+</td>
+<td style="text-align:right;">
+-0.02
+</td>
+<td style="text-align:right;">
+0.98
+</td>
+<td style="text-align:right;">
+-0.80
+</td>
+<td style="text-align:right;">
+0.78
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicporegon
+</td>
+<td style="text-align:right;">
+0.68
+</td>
+<td style="text-align:right;">
+0.35
+</td>
+<td style="text-align:right;">
+1.91
+</td>
+<td style="text-align:right;">
+0.06
+</td>
+<td style="text-align:right;">
+-0.02
+</td>
+<td style="text-align:right;">
+1.38
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicppennsylvania
+</td>
+<td style="text-align:right;">
+0.17
+</td>
+<td style="text-align:right;">
+0.30
+</td>
+<td style="text-align:right;">
+0.59
+</td>
+<td style="text-align:right;">
+0.56
+</td>
+<td style="text-align:right;">
+-0.41
+</td>
+<td style="text-align:right;">
+0.76
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicprhode island
+</td>
+<td style="text-align:right;">
+1.17
+</td>
+<td style="text-align:right;">
+0.78
+</td>
+<td style="text-align:right;">
+1.51
+</td>
+<td style="text-align:right;">
+0.13
+</td>
+<td style="text-align:right;">
+-0.30
+</td>
+<td style="text-align:right;">
+2.83
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpsouth carolina
+</td>
+<td style="text-align:right;">
+-0.36
+</td>
+<td style="text-align:right;">
+0.36
+</td>
+<td style="text-align:right;">
+-0.98
+</td>
+<td style="text-align:right;">
+0.32
+</td>
+<td style="text-align:right;">
+-1.07
+</td>
+<td style="text-align:right;">
+0.35
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpsouth dakota
+</td>
+<td style="text-align:right;">
+0.18
+</td>
+<td style="text-align:right;">
+0.63
+</td>
+<td style="text-align:right;">
+0.29
+</td>
+<td style="text-align:right;">
+0.77
+</td>
+<td style="text-align:right;">
+-1.12
+</td>
+<td style="text-align:right;">
+1.41
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicptennessee
+</td>
+<td style="text-align:right;">
+-0.30
+</td>
+<td style="text-align:right;">
+0.35
+</td>
+<td style="text-align:right;">
+-0.86
+</td>
+<td style="text-align:right;">
+0.39
+</td>
+<td style="text-align:right;">
+-0.99
+</td>
+<td style="text-align:right;">
+0.39
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicptexas
+</td>
+<td style="text-align:right;">
+-0.06
+</td>
+<td style="text-align:right;">
+0.28
+</td>
+<td style="text-align:right;">
+-0.23
+</td>
+<td style="text-align:right;">
+0.82
+</td>
+<td style="text-align:right;">
+-0.62
+</td>
+<td style="text-align:right;">
+0.50
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicputah
+</td>
+<td style="text-align:right;">
+-0.03
+</td>
+<td style="text-align:right;">
+0.45
+</td>
+<td style="text-align:right;">
+-0.07
+</td>
+<td style="text-align:right;">
+0.95
+</td>
+<td style="text-align:right;">
+-0.93
+</td>
+<td style="text-align:right;">
+0.85
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpvermont
+</td>
+<td style="text-align:right;">
+2.25
+</td>
+<td style="text-align:right;">
+0.82
+</td>
+<td style="text-align:right;">
+2.76
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+<td style="text-align:right;">
+0.82
+</td>
+<td style="text-align:right;">
+4.18
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpvirginia
+</td>
+<td style="text-align:right;">
+0.61
+</td>
+<td style="text-align:right;">
+0.31
+</td>
+<td style="text-align:right;">
+1.98
+</td>
+<td style="text-align:right;">
+0.05
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+<td style="text-align:right;">
+1.22
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpwashington
+</td>
+<td style="text-align:right;">
+0.73
+</td>
+<td style="text-align:right;">
+0.33
+</td>
+<td style="text-align:right;">
+2.20
+</td>
+<td style="text-align:right;">
+0.03
+</td>
+<td style="text-align:right;">
+0.08
+</td>
+<td style="text-align:right;">
+1.39
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpwest virginia
+</td>
+<td style="text-align:right;">
+0.13
+</td>
+<td style="text-align:right;">
+0.45
+</td>
+<td style="text-align:right;">
+0.28
+</td>
+<td style="text-align:right;">
+0.78
+</td>
+<td style="text-align:right;">
+-0.78
+</td>
+<td style="text-align:right;">
+1.01
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpwisconsin
+</td>
+<td style="text-align:right;">
+0.81
+</td>
+<td style="text-align:right;">
+0.34
+</td>
+<td style="text-align:right;">
+2.43
+</td>
+<td style="text-align:right;">
+0.02
+</td>
+<td style="text-align:right;">
+0.16
+</td>
+<td style="text-align:right;">
+1.48
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stateicpwyoming
+</td>
+<td style="text-align:right;">
+0.84
+</td>
+<td style="text-align:right;">
+1.44
+</td>
+<td style="text-align:right;">
+0.58
+</td>
+<td style="text-align:right;">
+0.56
+</td>
+<td style="text-align:right;">
+-2.42
+</td>
+<td style="text-align:right;">
+4.11
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+education_levelPost Secondary or Higher
+</td>
+<td style="text-align:right;">
+0.36
+</td>
+<td style="text-align:right;">
+0.07
+</td>
+<td style="text-align:right;">
+4.94
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.22
+</td>
+<td style="text-align:right;">
+0.50
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+education_levelSome post secondary
+</td>
+<td style="text-align:right;">
+0.26
+</td>
+<td style="text-align:right;">
+0.09
+</td>
+<td style="text-align:right;">
+2.98
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.09
+</td>
+<td style="text-align:right;">
+0.44
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hispanicnot hispanic
+</td>
+<td style="text-align:right;">
+-0.47
+</td>
+<td style="text-align:right;">
+0.10
+</td>
+<td style="text-align:right;">
+-4.69
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+-0.67
+</td>
+<td style="text-align:right;">
+-0.27
+</td>
+</tr>
+</tbody>
+</table>
+<p>Table <a href="#tab:model">2</a> (below), shows the estimates for the coefficients that will fit into our logistic regression equation. These coefficients will fit into Equation <a href="#eq:logit">(1)</a>, and were calculated using data from the Voter Study Group (<span class="citation"><a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck</a> (<a href="#ref-citeVSG" role="doc-biblioref">2020</a>)</span>). The table is made using <code>kable</code> from <code>knitr</code> (<span class="citation"><a href="#ref-citeKnitr" role="doc-biblioref">Xie</a> (<a href="#ref-citeKnitr" role="doc-biblioref">2020</a>)</span>) and is formatted using <code>kableExtra</code> (<span class="citation"><a href="#ref-citekableExtra" role="doc-biblioref">Zhu</a> (<a href="#ref-citekableExtra" role="doc-biblioref">2020</a>)</span>)<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>. We can see that our p-values for variables like gender, age, hispanic and education return very significant results while the states have varying levels of significance. What our p-values tell us is whether or not our variable is statistically significant in impacting our response variable, in this case, whether the respondent will vote for Biden or not. When we look at our p-values, we want them to be as small as possible and can assume they’re significant if it’s under 0.05. As for the coefficients, the value we receive is in terms of log odds. When the log odds are positive, it means that the person will likely vote for Biden and if it’s negative it means they’ll likely vote for Trump.</p>
+<div class="figure"><span style="display:block;" id="fig:coefficients"></span>
+<img src="{{< blogdown/postref >}}index_files/figure-html/coefficients-1.png" alt="Coefficient Estimates" width="672" />
+<p class="caption">
+Figure 4: Coefficient Estimates
+</p>
+</div>
+<p>Figure <a href="#fig:coefficients">4</a> shows us the coefficients that would fit into equation <a href="#eq:logit">(1)</a> using the polling data (<span class="citation"><a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck</a> (<a href="#ref-citeVSG" role="doc-biblioref">2020</a>)</span>). We also have error bars present, which show the upper and lower estimates for the coefficients. What we have to look out for in this scenario is that coefficients with negative values would mean that the person is more likely to vote for Donald Trump (with that characteristic) and positive values mean the person is more likely to vote for Joe Biden. Table <a href="#tab:model">2</a> shows a numerical view of Figure <a href="#fig:coefficients">4</a>, along with p-values.</p>
+<p>Using the outputs of the logistic regression model, we can get an equation that follows the form of <a href="#eq:logit">(1)</a>, but with the <span class="math inline">\(\beta\)</span> values filled out. This equation is difficult to write out because of the many variables, but in short, if the person’s characteristic fits in with a certain variable, it is used in the equation. Then the equation is summed up and the probability is found using equation <a href="#eq:prob">(2)</a>.</p>
+<div class="figure"><span style="display:block;" id="fig:cooks"></span>
+<img src="{{< blogdown/postref >}}index_files/figure-html/cooks-1.png" alt="Cook's Distance Plot for Model" width="672" />
+<p class="caption">
+Figure 5: Cook’s Distance Plot for Model
+</p>
+</div>
+<p>Figure <a href="#fig:cooks">5</a> shows the cooks distance for observations in our polling data set. Cook’s distance is useful for checking if a model is working correctly because it tells us how far a point is from the predicted value of it, telling us which points negatively impact our model. In our scenario, the distance between values would be the true value using our <code>glm</code> model vs what the <code>predict.glm</code> function returned. Figure <a href="#fig:cooks">5</a> takes all observations of our polling data (<span class="citation"><a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck</a> (<a href="#ref-citeVSG" role="doc-biblioref">2020</a>)</span>), and calculates the Cook’s distance for it, showing which points can hurt the results of our model. We find that out of the 5200 observations, there aren’t too many points that deviate from what we predict. This makes sense for our model because, in the real world, some people who will support Donald Trump or Joe Biden, even if they don’t “fit” the usual voter demographic for the candidate. Since the number of observations with large Cook’s Distances is low, we can conclude that our model is fairly strong.</p>
+<p>We can also look at some common assumptions for logistic regression and check if our model follows them or not. One assumption is that the data set used is large. The data we used to create the model had about 5000 observations, which is high but maybe in the future, we could use a larger data set to increase the accuracy of predictions. Another assumption that logistic regression makes is that the observations are independent of each other. We know that the observations used for our model were independent, not only because the Voter Study Group ensures that there aren’t duplicates but because they assign each respondent a unique ID number.</p>
+<p>Lastly, using our coefficients (Table <a href="#tab:model">2</a>), we can calculate the upper and lower bounds for the probabilities predicted from our model. For our lower probability (white male, from North Dakota, aged 36-49, with some post-secondary education and not hispanic) we get a probability of 22% for supporting Biden. For our upper probability (black woman, from Vermont, aged 18-35, with post-secondary or higher education and considers themselves hispanic) we get a probability of 99% for supporting Joe Biden.</p>
+</div>
+<div id="results" class="section level1">
+<h1>Results</h1>
+<div class="figure"><span style="display:block;" id="fig:stateplot"></span>
+<img src="{{< blogdown/postref >}}index_files/figure-html/stateplot-1.png" alt="Proportion of each State Voting for Biden" width="672" />
+<p class="caption">
+Figure 6: Proportion of each State Voting for Biden
+</p>
+</div>
+<p>Figure <a href="#fig:stateplot">6</a> shows us the proportion of respondents voting for Joe Biden broken down by state, along with the predicted proportions using MRP. We have also included the errors for each predicted value. We can see that the predicted proportions are fairly close to what the polling data showed. But, we also have to acknowledge the errors present, we can see that many states’ errors cross over the 50% line which could be pivotal for each candidate because of the winner take all nature of the electoral college. We can see that some states like Florida and Georgia have small errors but some states who have very large ones like North Dakota and Wyoming.</p>
+<div class="figure"><span style="display:block;" id="fig:statemap"></span>
+<img src="{{< blogdown/postref >}}index_files/figure-html/statemap-1.png" alt="Proportion of Voters from Each State Voting Joe Biden" width="672" />
+<p class="caption">
+Figure 7: Proportion of Voters from Each State Voting Joe Biden
+</p>
+</div>
+<p>Figure <a href="#fig:statemap">7</a> is an amazing view of all the states and which candidate they are leaning towards voting for using <code>statebins</code> (<span class="citation"><a href="#ref-citeStatebins" role="doc-biblioref">Rudis</a> (<a href="#ref-citeStatebins" role="doc-biblioref">2020</a>)</span>). We see that states like Vermont, Connecticut and California are some of the more “blue” states, meaning they plan to vote for Joe Biden, while North Dakota, Arkansas and Idaho are the “red” states, planning to vote for Donald Trump. The states that are more white can be the most important for the race when it comes to deciding an actual winner through the electoral college. We see that Florida, Louisiana and New Hampshire are some of the more undecided states, and a switch in these states can influence the election greatly.</p>
+<p>We can also take note of Figure <a href="#fig:pollmap">3</a>. We noted earlier that that Florida and Georgia were undecided from our polling data but after applying the model to the post-stratification data, we see that Florida and Georgia are actually leaning red. We do see some other states change their support as well, such as Louisiana, Missouri and Ohio, to name a few.</p>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:colleges">Table 3: </span>Joe Biden Voting Result Estimates
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+Lower Estimate
+</th>
+<th style="text-align:right;">
+Mean Estimate
+</th>
+<th style="text-align:right;">
+Upper Estimate
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Number of Colleges
+</td>
+<td style="text-align:right;">
+191
+</td>
+<td style="text-align:right;">
+260
+</td>
+<td style="text-align:right;">
+423
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Proportion of Vote (%)
+</td>
+<td style="text-align:right;">
+46
+</td>
+<td style="text-align:right;">
+51
+</td>
+<td style="text-align:right;">
+56
+</td>
+</tr>
+</tbody>
+</table>
+<p>Table <a href="#tab:colleges">3</a> shows the lower, mean and upper predictions for the results of the election for Joe Biden. We see that on the lower end, Biden can expect to get 46.1% of the popular vote while only getting 191 electoral colleges. We also see that our middle estimate says Biden will get 51% of the popular vote while still losing the election by getting only 260 colleges. Lastly, on the upper estimate for Biden’s results, he can get 56% of the popular vote while getting 423 colleges! This truly shows how close this election is, as we can see in Figure <a href="#fig:stateplot">6</a>, many states are hovering around the 50% mark, which shows the colleges can go either way. The number of electoral colleges by state were found on the Britannica Encylopedia’s website (<span class="citation"><a href="#ref-colleges" role="doc-biblioref">Encyclopaedia Britannica</a> (<a href="#ref-colleges" role="doc-biblioref">n.d.</a>)</span>).</p>
+<div class="figure"><span style="display:block;" id="fig:votingscales"></span>
+<img src="{{< blogdown/postref >}}index_files/figure-html/votingscales-1.png" alt="Proportion of Biden votes by state" width="672" />
+<p class="caption">
+Figure 8: Proportion of Biden votes by state
+</p>
+</div>
+<p>Figure <a href="#fig:votingscales">8</a> is a different view of Figure <a href="#fig:stateplot">6</a>, this time only focusing on the predictions for each state with the errors included. We see that many states have error bars overlapping the 50% line, showing that many states are a toss-up, given the nature of the electoral college.</p>
+</div>
+<div id="discussion" class="section level1">
+<h1>Discussion</h1>
+<p>As seen in Table <a href="#tab:colleges">3</a>, the mean estimate is that Joe Biden will win the popular vote with 51% of the vote with a margin of error of +/- 4%. However, the American election operates according to the electoral college and as such, it is possible that a candidate wins the popular vote but loses the electoral college. This has happened on two occasions: in 2000 when Al Gore lost to George W. Bush and in 2016 when Donald Trump won over Hillary Clinton (<span class="citation"><a href="#ref-cbc" role="doc-biblioref">Blum</a> (<a href="#ref-cbc" role="doc-biblioref">2020</a>)</span>). According to our results, Biden would win the popular vote but lose the electoral college vote with a mean estimate of 260 points (270 is the threshold for victory). Although, the upper and lower estimates for Biden’s college counts are 423 and 191, respectively. The abolishment of the electoral college has been considered, however, professor Opal from McGill university notes that it would require a constitutional amendment to pass this unlikely change (<span class="citation"><a href="#ref-cbc" role="doc-biblioref">Blum</a> (<a href="#ref-cbc" role="doc-biblioref">2020</a>)</span>).</p>
+<p>We do observe a large distribution of colleges supporting Joe Biden. As referenced above, Table <a href="#tab:colleges">3</a> has a range of 191 to 423 colleges for Joe Biden. This large distribution shows that there are many states that are a toss-up and in some extreme scenarios, Joe Biden can win or lose all of the toss-up states and it can impact the results of the election drastically.</p>
+<p>Through Figure <a href="#fig:statemap">7</a>, we can visualize numerous national trends of voting behaviour. First, it is observable that Joe Biden and the Democrats have a strong hold of the west coast states. However, this was not always the case. Up until 1988, the Republicans consistently had the support of California voters, who make up 55 electoral college points (<span class="citation"><a href="#ref-krishnakumar" role="doc-biblioref">Krishnakumar, Moore, and Emamdjomeh</a> (<a href="#ref-krishnakumar" role="doc-biblioref">2016</a>)</span>). However, California had a massive spike in Hispanic and Asian immigrants during the 1990s (<span class="citation"><a href="#ref-krishnakumar" role="doc-biblioref">Krishnakumar, Moore, and Emamdjomeh</a> (<a href="#ref-krishnakumar" role="doc-biblioref">2016</a>)</span>). This growing voter base was put off by the anti-immigration stance of the Republican party; Particularly in 1994, when the Republicans attempted to pass a law that would deny public services to illegal immigrants (<span class="citation"><a href="#ref-krishnakumar" role="doc-biblioref">Krishnakumar, Moore, and Emamdjomeh</a> (<a href="#ref-krishnakumar" role="doc-biblioref">2016</a>)</span>). As a result of information, it comes as no surprise that Biden has a strong lead in California in our data and collects the 55 electoral college points.</p>
+<p>Secondly, based on Figure <a href="#fig:statemap">7</a>, Republican party leader Donald Trump performs very well in the American mid-west. This would follow-up Trump’s 2016 victory in the historically democratic states of Iowa, Ohio, Michigan and Wisconsin (<span class="citation"><a href="#ref-lauck" role="doc-biblioref">Lauck</a> (<a href="#ref-lauck" role="doc-biblioref">2017</a>)</span>). Many of these states had not voted Republican since the ’80s and were considered pillars of the Democratic voter base (<span class="citation"><a href="#ref-lauck" role="doc-biblioref">Lauck</a> (<a href="#ref-lauck" role="doc-biblioref">2017</a>)</span>). However, blue-collar workers in these states have flipped their votes over their dissatisfaction with the economy and manufacturing sector under Democratic leadership (<span class="citation"><a href="#ref-wilson" role="doc-biblioref">Wilson</a> (<a href="#ref-wilson" role="doc-biblioref">2017</a>)</span>). Considering the importance of an improving economy to mid-west voters, the economic growth under the Trump administration should lead to another set of victories in this part of America (<span class="citation"><a href="#ref-bbc" role="doc-biblioref">News</a> (<a href="#ref-bbc" role="doc-biblioref">2020</a>)</span>). This information would explain the results in our data for these mid-west states.</p>
+<p>Thirdly, as seen in Figure <a href="#fig:statemap">7</a>, Joe Biden seems to possess a strong lead in north-eastern coastal states. This geographic area of America has historically, and consistently, been comprised of democratic-leaning states. This is the case because Democrats tend to gather a large percentage of the votes in big cities (<span class="citation"><a href="#ref-atlantic" role="doc-biblioref">Thompson</a> (<a href="#ref-atlantic" role="doc-biblioref">2019</a>)</span>). The north-eastern coast includes many of these populous cities such as New York, Boston, Washington D.C. and Newark. As these cities have become more ethnically diverse, less manufacturing-oriented and more educated over the years, the voter base has shifted towards the Democratic party (<span class="citation"><a href="#ref-atlantic" role="doc-biblioref">Thompson</a> (<a href="#ref-atlantic" role="doc-biblioref">2019</a>)</span>). Like California on the west coast, these big east coast cities are focal points for incoming immigrants who tend to vote for the democratic party (<span class="citation"><a href="#ref-atlantic" role="doc-biblioref">Thompson</a> (<a href="#ref-atlantic" role="doc-biblioref">2019</a>)</span>). As a result, the results from Figures <a href="#fig:statemap">7</a> and <a href="#fig:stateplot">6</a> for north-eastern coastal states fall in line with prior voting behaviour and tendencies.</p>
+<p>In Figure <a href="#fig:coefficients">4</a>, we see that Hispanic voters are more likely to vote for, democratic nominee, Joe Biden because the log-odds are greater than 0. As previously mentioned, the Republican’s willingness to pass Proposition 187 to restrict public services to illegal immigrants was poorly received by the Hispanic community, in particular (<span class="citation"><a href="#ref-krishnakumar" role="doc-biblioref">Krishnakumar, Moore, and Emamdjomeh</a> (<a href="#ref-krishnakumar" role="doc-biblioref">2016</a>)</span>). However, modern circumstances surrounding President Trump have also played a role in the aversion of the Hispanic community towards the Republican party. In the 2019 paper by Gutierrez et al., Gutierrez cites that Mexican Americans and immigrants felt threatened and targeted by Trump’s proposals and rhetoric (<span class="citation"><a href="#ref-gutierrez" role="doc-biblioref">Gutierrez et al.</a> (<a href="#ref-gutierrez" role="doc-biblioref">2019</a>)</span>). Despite comments specifically targeting illegal immigrants from Mexico, a focus group in Florida composed of Puerto Rican voters noted that they feel Trump is villainizing the entire Latino population (<span class="citation"><a href="#ref-gutierrez" role="doc-biblioref">Gutierrez et al.</a> (<a href="#ref-gutierrez" role="doc-biblioref">2019</a>)</span>). This could explain why Hispanic voters lean towards voting for Biden based on results seen in Figure 5. Gutierrez also follows-up by suggesting that the anger towards the 2016 election result, which saw Trump become president, could mobilize the Hispanic community to vote in greater numbers during the 2020 election (<span class="citation"><a href="#ref-gutierrez" role="doc-biblioref">Gutierrez et al.</a> (<a href="#ref-gutierrez" role="doc-biblioref">2019</a>)</span>).</p>
+<p>Based on our results, white voters have a strong propensity to vote for Trump in the 2020 election (Table <a href="#tab:model">2</a>). This is important as white voters make up over 75% of the sample population and the post-stratification data (Figure <a href="#fig:data1">1</a>). In the paper by Major et al., the researchers suggest that white voters are strongly supporting the Trump campaign as a result of the changing demographics in the United States (<span class="citation"><a href="#ref-major" role="doc-biblioref">Major, Blodorn, and Blascovich</a> (<a href="#ref-major" role="doc-biblioref">2016</a>)</span>). As forecasted by the U.S. Census Bureau, the proportion of non-white individuals in the United States will be considerably higher than white individuals by the year 2060 (<span class="citation"><a href="#ref-us2012" role="doc-biblioref">Census</a> (<a href="#ref-us2012" role="doc-biblioref">2012</a>)</span>). When reminded of this projection, Major et al. report that white voters with high ethnic identification became more concerned with their declining influence and have begun supporting Trump’s anti-immigration policies, as a result (<span class="citation"><a href="#ref-major" role="doc-biblioref">Major, Blodorn, and Blascovich</a> (<a href="#ref-major" role="doc-biblioref">2016</a>)</span>). In contrast, our results show that black voters have a high propensity to vote for Biden (Table <a href="#tab:model">2</a>). As suggested by researchers, this support is likely due to their resentment towards Trump. Trump’s opposition to the Black Lives Matter group and failure to condemn racism at key moments is viewed as threatening among African American voters (<span class="citation"><a href="#ref-towler" role="doc-biblioref">Towler and Parker</a> (<a href="#ref-towler" role="doc-biblioref">2018</a>)</span>). Black voters may represent a smaller percentage of the vote than white individuals, however, their support for Joe Biden has the potential to impact the election on a grand scale.</p>
+<p>Based on the polling data in Figure <a href="#fig:data1">1</a>, male and female voting is nearly equal at 50%. However, our results suggest that men are more likely to vote for Republican nominee Trump, while women are more likely to vote for Democratic nominee Joe Biden (Table <a href="#tab:model">2</a>). It is important to note that in the 2016 election, a significantly greater number of women voted in the election than men (<span class="citation"><a href="#ref-pewexam" role="doc-biblioref">PEW</a> (<a href="#ref-pewexam" role="doc-biblioref">2018</a>)</span>). Furthermore, 54% of women voted for the Hillary Clinton of the Democratic party <span class="citation"><a href="#ref-pewexam" role="doc-biblioref">PEW</a> (<a href="#ref-pewexam" role="doc-biblioref">2018</a>)</span>). This disposition to vote for the Democratic party has been a staple of American women for the past 40 years. When president Raegan was nominated in 1980, the Republican party adopted right-leaning viewpoints on several issues relevant to women (<span class="citation"><a href="#ref-thompson_2020" role="doc-biblioref">Thompson</a> (<a href="#ref-thompson_2020" role="doc-biblioref">2020</a>)</span>). In particular, the Republican party began opposing abortion rights for women and ceased supporting the Equal Rights Amendment (<span class="citation"><a href="#ref-thompson_2020" role="doc-biblioref">Thompson</a> (<a href="#ref-thompson_2020" role="doc-biblioref">2020</a>)</span>). Even though Raegan won that election, the decline of female voting support of the Republican party was commencing. This trend could serve as an explanation for the female support of Joe Biden in our results.</p>
+<p>Contrary to classic convention, our results indicate that older individuals are progressively more likely to vote for Democratic nominee Joe Biden (Figure 3). One possible explanation for this change in voter behaviour could be the COVID-19 outbreak that has plagued the entire world this year. As per the Centers for Disease Control and Protection, COVID-19 deaths are increasingly severe with age and disproportionately higher past the age of 55 (<span class="citation"><a href="#ref-cdc" role="doc-biblioref">CDC</a> (<a href="#ref-cdc" role="doc-biblioref">2020</a>)</span>). As a result, the COVID-19 outbreak is viewed as a critical issue in this year’s election for the older percentage of voters (<span class="citation"><a href="#ref-pew" role="doc-biblioref">PEW</a> (<a href="#ref-pew" role="doc-biblioref">2020b</a>)</span>). Trump’s downplaying of the virus and refusal to wear a mask may have upset the older voter population; culminating in Biden’s surprising lead over older individuals in our research (<span class="citation"><a href="#ref-cnn" role="doc-biblioref">Happe, Sullivan, and Pepper</a> (<a href="#ref-cnn" role="doc-biblioref">2020</a>)</span>). Also, these voters may be impressed with Biden’s plan to provide free testing to all Americans and financial support to those that lost their job due to the pandemic (<span class="citation"><a href="#ref-cnn" role="doc-biblioref">Happe, Sullivan, and Pepper</a> (<a href="#ref-cnn" role="doc-biblioref">2020</a>)</span>).</p>
+<p>Our results indicate that the higher education level completed, the more likely an individual will vote for Democratic nominee Joe Biden during the 2020 presidential election (Figure <a href="#fig:coefficients">4</a>). A possible explanation for this general trend is that large, urban cities contain more universities and educational complexes compared to their rural counterparts. As a result, cities are more accessible for their inhabitants to complete higher levels of education. It is well understood that these large, urban cities tend to vote for the Democratic party while rural areas lean towards the Republican party (<span class="citation"><a href="#ref-atlantic" role="doc-biblioref">Thompson</a> (<a href="#ref-atlantic" role="doc-biblioref">2019</a>)</span>). As such, Republican-leaning states in the rural, mid-west will naturally be inhabited by less educated individuals than the urban individuals living in Democrat-voting coastal states.</p>
+<p>We are very confident in our results for states that have p-values less than 0.05 such as California, Connecticut, Michigan and others (Figure <a href="#fig:coefficients">4</a>). The results from these states are statistically significantly and provide stronger evidence that we should reject the null hypothesis that Joe Biden will not win the popular vote in the 2020 election. In contrast, we are less confident in states that have p-values greater than 0.5. For example, the states of Oklahoma, Utah and Georgia have p-values that are relatively high compared to other states (Table <a href="#tab:model">2</a>). These results distort our ability to assume that their results are significant in predicting the winner.</p>
+<p>Considering the concurrences between our data results and the historical information we just outlined, we believe that Joe Biden will win the popular vote but ultimately lose the election through the electoral college. We believe Biden will gain the support of big-city residents to win the popular vote but fail to make up ground in the rural, blue-collar mid-west that Trump had won in 2016. However, it is possible that our prediction doesn’t hold due to the incredibly close results in certain states, such as Florida, Georgia and others (Figure <a href="#fig:statemap">7</a>). Also, considering the weaknesses and limitations of this study (Outlined in the next section), the validity of the data used in this research is subject to debate.</p>
+<p>Lastly, we can take a look at the state of Ohio. Ohio has been one of the best predictors for who will win the presidential election. Ballotpedia calls the state a “bellwether” because, since 1900, Ohio has voted for the winning candidate 93.33% of the time (<span class="citation"><a href="#ref-ballotpedia" role="doc-biblioref">Ballotpedia</a> (<a href="#ref-ballotpedia" role="doc-biblioref">n.d.</a>)</span>). This is a remarkable number and as seen in <a href="#fig:statemap">7</a>, Ohio appears to be redder than blue which may give us evidence that although Biden won the popular vote, Trump may scrape out a victory.</p>
+<p>Overall, this election is going to be extremely close and according to our results including Figures <a href="#fig:pollmap">3</a>, <a href="#fig:statemap">7</a>, <a href="#fig:stateplot">6</a> and Tables <a href="#tab:colleges">3</a> and <a href="#tab:model">2</a>, November 3rd is going have a long night!</p>
+<div id="weaknesses-and-next-steps" class="section level2">
+<h2>Weaknesses and Next Steps</h2>
+<p>As seen in the 2016 election, the polls leading up to the presidential election can be inaccurate. Typically, this has not been an issue for the American polling companies. However, since becoming a presidential candidate, Donald Trump has become a polarizing figure in the media and among voters. As a result, some Trump voters may be unwilling to show their support for the Republican candidate.</p>
+<p>In addition, 2020 has been plagued by the COVID-19 pandemic and has changed the landscape of the presidential election. Not only has it become a key concern for voters when deciding their next president, but the virus has also changed the campaigning procedures and influencing voting mediums. For example, democratic representative Joe Biden has been holding parking lot rallies where supporters are social distancing within their cars while showing their support. Likewise, Trump rallies have seen a lower number of supporters than his previous campaign trails. However, most importantly, voters are changing their approach for voting with safety precautions regarding the pandemic. 91.6 million votes have already been cast through the mail to avoid coming in contact with others at the polling booths. As a result, this election is far from usual or predictable. Various aspects of the election are critically affected by the pandemic virus and in turn, the polling results from ACS should not be considered reliable or representative of the population as they may have been in previous years.</p>
+<p>A limitation of the survey dataset we are using is that it is from June 2020. As a result, the data is missing four months where voters may have changed their opinions and political allegiances. Healthcare, in particular, is an issue of very high importance for Americans during this election (<span class="citation"><a href="#ref-pew" role="doc-biblioref">PEW</a> (<a href="#ref-pew" role="doc-biblioref">2020b</a>)</span>). As of September 2020, four Covid-19 vaccines have entered phase 3 of clinical trials and a vaccine may arrive by early 2021 (<span class="citation"><a href="#ref-nih" role="doc-biblioref">NIH</a> (<a href="#ref-nih" role="doc-biblioref">2020</a>)</span>). This kind of impactful development, among others, may influence voter behavior and alter the dataset if collected now.</p>
+<p>For future studies, we would suggest allocating more of the polling company budget towards examining the education level of individuals to get a better estimate of the results and gain a clearer picture of what the American population is leaning towards before the election. As seen in Figure <a href="#fig:coefficients">4</a>, the estimate for this variable is not particularly strong in favor, nor against, voting for Joe Biden. In addition, there is little separating the estimates for the various categories of education level in our research.</p>
+</div>
+</div>
+<div id="code" class="section level1">
+<h1>Code</h1>
+<p>Code supporting this analysis can be found at: <a href="https://github.com/matthewwankiewicz/US_election_forecast" class="uri">https://github.com/matthewwankiewicz/US_election_forecast</a></p>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-citermarkdown" class="csl-entry">
+Allaire, JJ, Yihui Xie, Jonathan McPherson, Javier Luraschi, Kevin Ushey, Aron Atkins, Hadley Wickham, Joe Cheng, Winston Chang, and Richard Iannone. 2020. <em>Rmarkdown: Dynamic Documents for r</em>. <a href="https://github.com/rstudio/rmarkdown">https://github.com/rstudio/rmarkdown</a>.
+</div>
+<div id="ref-ballotpedia" class="csl-entry">
+Ballotpedia. n.d. <span>“Presidential Voting Trends in Ohio.”</span> <em>Ballotpedia</em>. <a href="https://ballotpedia.org/Presidential_voting_trends_in_Ohio">https://ballotpedia.org/Presidential_voting_trends_in_Ohio</a>.
+</div>
+<div id="ref-cbc" class="csl-entry">
+Blum, Benjamin. 2020. <span>“Understanding the Electoral College and How the u.s. President Is Really Elected.”</span> <em>CBCnews</em>. CBC/Radio Canada. <a href="https://www.cbc.ca/news/world/electoral-college-explainer-1.5768507">https://www.cbc.ca/news/world/electoral-college-explainer-1.5768507</a>.
+</div>
+<div id="ref-georgia" class="csl-entry">
+Britannica. 2020. <span>“United States Presidential Election of 1992.”</span> <a href="https://www.britannica.com/event/United-States-presidential-election-of-1992">https://www.britannica.com/event/United-States-presidential-election-of-1992</a>.
+</div>
+<div id="ref-12" class="csl-entry">
+CAWP. 2020. <span>“2020 Presidential Gender Gap Poll Tracker.”</span> <em>CAWP</em>. <a href="https://cawp.rutgers.edu/presidential-poll-tracking-2020">https://cawp.rutgers.edu/presidential-poll-tracking-2020</a>.
+</div>
+<div id="ref-cdc" class="csl-entry">
+CDC. 2020. <span>“COVID-19 Provisional Counts - Weekly Updates by Select Demographic and Geographic Characteristics.”</span> <em>Centers for Disease Control and Prevention</em>. Centers for Disease Control; Prevention. <a href="https://www.cdc.gov/nchs/nvss/vsrr/covid_weekly/index.htm">https://www.cdc.gov/nchs/nvss/vsrr/covid_weekly/index.htm</a>.
+</div>
+<div id="ref-us2012" class="csl-entry">
+Census, U. S. 2012. <span>“U.s. Census Bureau Projections Show a Slower Growing, Older, More Diverse Nation a Half Century from Now.”</span> <em>U.S. Census Bureau</em>. <a href="https://www-census-gov.myaccess.library.utoronto.ca/newsroom/releases/archives/population/cb12-243.html">https://www-census-gov.myaccess.library.utoronto.ca/newsroom/releases/archives/population/cb12-243.html</a>.
+</div>
+<div id="ref-colleges" class="csl-entry">
+Encyclopaedia Britannica, Editors of. n.d. <span>“United States Electoral College Votes by State.”</span> <a href="https://www.britannica.com/topic/United-States-Electoral-College-Votes-by-State-1787124">https://www.britannica.com/topic/United-States-Electoral-College-Votes-by-State-1787124</a>.
+</div>
+<div id="ref-3" class="csl-entry">
+Frey, William H. 2020. <span>“Older Voters May Secure a Biden Victory in 2020’s Swing States.”</span> <em>Brookings</em>. Brookings. <a href="https://www.brookings.edu/blog/the-avenue/2020/10/28/older-voters-may-secure-a-biden-victory-in-2020s-swing-states/">https://www.brookings.edu/blog/the-avenue/2020/10/28/older-voters-may-secure-a-biden-victory-in-2020s-swing-states/</a>.
+</div>
+<div id="ref-gutierrez" class="csl-entry">
+Gutierrez, Angela, Angela X. Ocampo, Matt A. Barreto, and Gary Segura. 2019. <span>“Somos más: How Racial Threat and Anger Mobilized Latino Voters in the Trump Era.”</span> <em>Political Research Quarterly</em> 72 (4): 960–75. <a href="https://doi.org/10.1177/1065912919844327">https://doi.org/10.1177/1065912919844327</a>.
+</div>
+<div id="ref-cnn" class="csl-entry">
+Happe, Mackenzie, Kate Sullivan, and Max Pepper. 2020. <span>“Where Trump and Biden Stand on Major Policy Issues.”</span> <em>CNN</em>. Cable News Network. <a href="https://www.cnn.com/2020/09/29/politics/trump-vs-biden-2020-election-policies/index.html">https://www.cnn.com/2020/09/29/politics/trump-vs-biden-2020-election-policies/index.html</a>.
+</div>
+<div id="ref-2" class="csl-entry">
+Janfaza, Rachel. 2020. <span>“Data Suggests 2020 Could See a Surge in Young u.s. Voters.”</span> <em>America Votes</em>. CTV News. <a href="https://www.ctvnews.ca/world/america-votes/data-suggests-2020-could-see-a-surge-in-young-u-s-voters-1.5159607">https://www.ctvnews.ca/world/america-votes/data-suggests-2020-could-see-a-surge-in-young-u-s-voters-1.5159607</a>.
+</div>
+<div id="ref-kennedy_gelman" class="csl-entry">
+Kennedy, Lauren, and Andrew Gelman. n.d. <span>“Know Your Population and Know Your Model: Using Model-Based Regression and Post-Stratification to Generalize Findings Beyond the Observed Sample.”</span> <a href="https://arxiv.org/pdf/1906.11323.pdf">https://arxiv.org/pdf/1906.11323.pdf</a>.
+</div>
+<div id="ref-krishnakumar" class="csl-entry">
+Krishnakumar, Priya, Maloy Moore, and Armand Emamdjomeh. 2016. <span>“After Decades of Republican Victories, Here’s How California Became a Blue State Again.”</span> <em>Los Angeles Times</em>. Los Angeles Times. <a href="https://www.latimes.com/projects/la-pol-ca-california-voting-history/">https://www.latimes.com/projects/la-pol-ca-california-voting-history/</a>.
+</div>
+<div id="ref-lauck" class="csl-entry">
+Lauck, Jon K. 2017. <span>“Trump and the Midwest: The 2016 Presidential Election and the Avenues of Midwestern Historiography.”</span> <em>Studies in Midwest History</em> 03 (01).
+</div>
+<div id="ref-11" class="csl-entry">
+Leon, Luis de. 2020. <span>“2020 Election: The Impact of the Latino Vote in Texas.”</span> <em>Kvue.com</em>. <a href="https://www.kvue.com/article/news/politics/vote-texas/election-2020-texas-latino-vote-impact/269-e27ced91-8f67-4bcf-bcc9-f0f56c5bc67f">https://www.kvue.com/article/news/politics/vote-texas/election-2020-texas-latino-vote-impact/269-e27ced91-8f67-4bcf-bcc9-f0f56c5bc67f</a>.
+</div>
+<div id="ref-major" class="csl-entry">
+Major, Brenda, Alison Blodorn, and Gregory Major Blascovich. 2016. <span>“The Threat of Increasing Diversity: Why Many White Americans Support Trump in the 2016 Presidential Election.”</span> <em>Group Processes Amp; Intergroup Relations</em> 21 (6): 931–40. <a href="https://doi.org/10.1177/1368430216677304">https://doi.org/10.1177/1368430216677304</a>.
+</div>
+<div id="ref-bbc" class="csl-entry">
+News, BBC. 2020. <span>“US 2020 Election: The Economy Under Trump in Six Charts.”</span> <em>BBC News</em>. BBC. <a href="https://www.bbc.com/news/world-45827430">https://www.bbc.com/news/world-45827430</a>.
+</div>
+<div id="ref-nih" class="csl-entry">
+NIH. 2020. <span>“Fourth Large-Scale COVID-19 Vaccine Trial Begins in the United States.”</span> <em>National Institutes of Health</em>. U.S. Department of Health; Human Services. <a href="https://www.nih.gov/news-events/news-releases/fourth-large-scale-covid-19-vaccine-trial-begins-united-states">https://www.nih.gov/news-events/news-releases/fourth-large-scale-covid-19-vaccine-trial-begins-united-states</a>.
+</div>
+<div id="ref-pewexam" class="csl-entry">
+PEW. 2018. <span>“An Examination of the 2016 Electorate, Based on Validated Voters.”</span> <em>Pew Research Center - U.S. Politics Amp; Policy</em>. Pew Research Center. <a href="https://www.pewresearch.org/politics/2018/08/09/an-examination-of-the-2016-electorate-based-on-validated-voters/">https://www.pewresearch.org/politics/2018/08/09/an-examination-of-the-2016-electorate-based-on-validated-voters/</a>.
+</div>
+<div id="ref-1" class="csl-entry">
+———. 2020a. <span>“Important Issues in the 2020 Election.”</span> <a href="https://www.pewresearch.org/politics/2020/08/13/important-issues-in-the-2020-election/">https://www.pewresearch.org/politics/2020/08/13/important-issues-in-the-2020-election/</a>.
+</div>
+<div id="ref-pew" class="csl-entry">
+———. 2020b. <a href="https://www.pewresearch.org/politics/2020/08/13/important-issues-in-the-2020-election/">https://www.pewresearch.org/politics/2020/08/13/important-issues-in-the-2020-election/</a>.
+</div>
+<div id="ref-citeR" class="csl-entry">
+R Core Team. 2019. <em>R: A Language and Environment for Statistical Computing</em>. Vienna, Austria: R Foundation for Statistical Computing. <a href="https://www.R-project.org/">https://www.R-project.org/</a>.
+</div>
+<div id="ref-citebroom" class="csl-entry">
+Robinson, David, Alex Hayes, and Simon Couch. 2020. <em>Broom: Convert Statistical Objects into Tidy Tibbles</em>. <a href="https://CRAN.R-project.org/package=broom">https://CRAN.R-project.org/package=broom</a>.
+</div>
+<div id="ref-citeStatebins" class="csl-entry">
+Rudis, Bob. 2020. <em>Statebins: Create United States Uniform Cartogram Heatmaps</em>. <a href="https://CRAN.R-project.org/package=statebins">https://CRAN.R-project.org/package=statebins</a>.
+</div>
+<div id="ref-citeIPUMS" class="csl-entry">
+Ruggles, Steven, Sarah Flood, Ronald Goeken, Josiah Grover, Erin Meyer, Jose Pacas, and Matthew Sobek. 2020. <em>IPUMS USA: Version 10.0 [ACS 2018]</em>. Minneapolis, MN: IPUMS. <a href="https://doi.org/10.18128/D010.V10.0">https://doi.org/10.18128/D010.V10.0</a>.
+</div>
+<div id="ref-citeVSG" class="csl-entry">
+Tausanovitch, Chris, and Lynn Vavreck. 2020. <em>Democracy Fund + UCLA Nationscape</em>. October 10-17, 2019 (version 20200814). <a href="https://www.voterstudygroup.org/publication/nationscape-data-set">https://www.voterstudygroup.org/publication/nationscape-data-set</a>.
+</div>
+<div id="ref-atlantic" class="csl-entry">
+Thompson, Derek. 2019. <span>“How Democrats Conquered the City.”</span> <em>The Atlantic</em>. Atlantic Media Company. <a href="https://www.theatlantic.com/ideas/archive/2019/09/brief-history-how-democrats-conquered-city/597955/">https://www.theatlantic.com/ideas/archive/2019/09/brief-history-how-democrats-conquered-city/597955/</a>.
+</div>
+<div id="ref-thompson_2020" class="csl-entry">
+———. 2020. <span>“Why Men Vote for Republicans, and Women Vote for Democrats.”</span> <a href="https://www.theatlantic.com/ideas/archive/2020/02/how-women-became-democratic-partisans/606274/">https://www.theatlantic.com/ideas/archive/2020/02/how-women-became-democratic-partisans/606274/</a>.
+</div>
+<div id="ref-towler" class="csl-entry">
+Towler, Christopher C., and Christopher S. Parker. 2018. <span>“Between Anger and Engagement: Donald Trump and Black America.”</span> <em>The Journal of Race, Ethnicity, and Politics</em> 3 (1): 219–53. <a href="https://doi.org/10.1017/rep.2017.38">https://doi.org/10.1017/rep.2017.38</a>.
+</div>
+<div id="ref-west_2020" class="csl-entry">
+West, Darrell M. 2020. <span>“It’s Time to Abolish the Electoral College.”</span> <em>Brookings</em>. Brookings. <a href="https://www.brookings.edu/policy2020/bigideas/its-time-to-abolish-the-electoral-college/">https://www.brookings.edu/policy2020/bigideas/its-time-to-abolish-the-electoral-college/</a>.
+</div>
+<div id="ref-citeTidyverse" class="csl-entry">
+Wickham, Hadley, Mara Averick, Jennifer Bryan, Winston Chang, Lucy D’Agostino McGowan, Romain François, Garrett Grolemund, et al. 2019. <span>“Welcome to the <span class="nocase">tidyverse</span>.”</span> <em>Journal of Open Source Software</em> 4 (43): 1686. <a href="https://doi.org/10.21105/joss.01686">https://doi.org/10.21105/joss.01686</a>.
+</div>
+<div id="ref-wilson" class="csl-entry">
+Wilson, Reid. 2017. <span>“How the Midwest Slipped Away from Dems.”</span> <em>TheHill</em>. <a href="https://thehill.com/homenews/state-watch/347414-how-the-midwest-slipped-away-from-dems">https://thehill.com/homenews/state-watch/347414-how-the-midwest-slipped-away-from-dems</a>.
+</div>
+<div id="ref-citeKnitr" class="csl-entry">
+Xie, Yihui. 2020. <em>Knitr: A General-Purpose Package for Dynamic Report Generation in r</em>. <a href="https://yihui.org/knitr/">https://yihui.org/knitr/</a>.
+</div>
+<div id="ref-citekableExtra" class="csl-entry">
+Zhu, Hao. 2020. <em>kableExtra: Construct Complex Table with ’Kable’ and Pipe Syntax</em>. <a href="https://CRAN.R-project.org/package=kableExtra">https://CRAN.R-project.org/package=kableExtra</a>.
+</div>
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Nationscape puts weights on the following factors: gender, the four major census regions, race, Hispanic ethnicity, household income, education, age, language spoken at home, nativity (U.S. - or foreign-born), 2016 presidential vote, and the urban-rural mix of the respondent’s zip code<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>data was cleaned using the <code>tidy</code> function called <code>broom</code> (<span class="citation"><a href="#ref-citebroom" role="doc-biblioref">Robinson, Hayes, and Couch</a> (<a href="#ref-citebroom" role="doc-biblioref">2020</a>)</span>)<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

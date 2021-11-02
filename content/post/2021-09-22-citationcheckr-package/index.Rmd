@@ -1,0 +1,14 @@
+---
+title: citationcheckR package
+author: Matthew Wankiewicz
+date: '2021-09-22'
+tags: []
+description: 'This is a package which is used to automate citations in R'
+---
+
+The `pkgdown` website can be seen below. A link to the actual website can be found [here](https://matthewwankiewicz.github.io/citationcheckR/)
+
+```{r site, echo=FALSE}
+knitr::include_url("https://matthewwankiewicz.github.io/citationcheckR/")
+```
+

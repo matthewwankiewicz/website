@@ -1,0 +1,17 @@
+---
+title: Sport Predictor Shiny App
+author: Matthew Wankiewicz
+date: '2021-11-01'
+categories:
+  - nba
+  - nfl
+tags:
+  - shiny app
+  - logistic regression
+description: 'This is a shiny app I created to predict NBA and NFL games. I plan to add tabs for MLB and NHL games as well.'
+---
+
+```{r app, echo=FALSE}
+knitr::include_app("https://wnkwz.shinyapps.io/predictors/")
+```
+

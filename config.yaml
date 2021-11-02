@@ -34,10 +34,6 @@ menu:
       pre: <i class='fa fa-user fa-fw'></i>
       url: /about/
       weight: 3
-    - name: Contact
-      pre: <i class='fa fa-phone fa-fw'></i>
-      url: /contact/
-      weight: 4
 social:
   github: matthewwankiewicz
   linkedin: 'matthew-wankiewicz-384715193'
