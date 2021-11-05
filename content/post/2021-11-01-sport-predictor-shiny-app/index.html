@@ -14,5 +14,7 @@ description: 'This is a shiny app I created to predict NBA and NFL games. I plan
 <script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
 
 
+<p>This app uses logistic regression on various team’s stats and determines the probability that the home team will win the game. For NFL games, the model uses offensive and defensive stats for both teams and creates the model. For NBA games, I am using the Four Factors stats, which are advanced stats that display a team’s turnover, free throw, rebounding and scoring rates.</p>
+<p>For the MLB model, I am using logistic regression on teams hitting stats. I then split up these stats by splits, so if a team is facing a lefty pitcher, the prediction will be made based off of the team’s success against lefties. The model will run for both teams against each other and project the winner. I plan to make a blog post for this model and its results…</p>
 <iframe src="https://wnkwz.shinyapps.io/predictors/?showcase=0" width="672" height="400px" data-external="1">
 </iframe>

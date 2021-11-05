@@ -6,7 +6,7 @@ tags: []
 description: 'This is a package which is used to automate citations in R'
 ---
 
-The `pkgdown` website can be seen below. A link to the actual website can be found [here](https://matthewwankiewicz.github.io/citationcheckR/)
+The `pkgdown` website can be seen below. A link to the actual website can be found [here](https://matthewwankiewicz.github.io/citationcheckR/). The package is used to automatic citations of other packages and is intended for people writing academic papers. The package will either take a list of packages you want to cite, or will take the loaded in packages and create citations for them.
 
 ```{r site, echo=FALSE}
 knitr::include_url("https://matthewwankiewicz.github.io/citationcheckR/")
