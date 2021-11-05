@@ -52,14 +52,14 @@ bibliography: references.bib
 <p>According to their website, IPUMS says, “Non respondents are contacted via telephone for a computer-assisted telephone interview (CATI) one month later. One-third of the non respondents to the mail or telephone survey are contacted in person for a computer-assisted personal interview (CAPI) one month following the CATI attempt” (<span class="citation"><a href="#ref-citeIPUMS" role="doc-biblioref">Ruggles et al.</a> (<a href="#ref-citeIPUMS" role="doc-biblioref">2020</a>)</span>). This means that IPUMS ensures that they keep track of non-respondents and encourage them to complete their surveys.</p>
 <p>The post-stratification has about 2.5 million records. To maintain unity with the survey data, we selected age, gender, race, hispanic, education as the target variables. We cleaned and regrouped these variables to align with the survey data. Figures <a href="#fig:data1">1</a> and <a href="#fig:data2">2</a> show the corresponding variable comparisons between the survey and the post-stratification data. The solid line and dotted line represents the survey and the post-stratification data, respectively.</p>
 <div class="figure"><span style="display:block;" id="fig:data1"></span>
-<img src="{{< blogdown/postref >}}index_files/figure-html/data1-1.png" alt="Demographics of Sample and Population" width="672" />
+<img src="staticdata1-1.png" alt="Demographics of Sample and Population" width="672" />
 <p class="caption">
 Figure 1: Demographics of Sample and Population
 </p>
 </div>
 <p>Figure <a href="#fig:data1">1</a> show us the voter demographics from the VSG data (<span class="citation"><a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck</a> (<a href="#ref-citeVSG" role="doc-biblioref">2020</a>)</span>) vs the ACS data (<span class="citation"><a href="#ref-citeIPUMS" role="doc-biblioref">Ruggles et al.</a> (<a href="#ref-citeIPUMS" role="doc-biblioref">2020</a>)</span>). For the most part, we see from Figure <a href="#fig:data1">1</a> that the polling data matches up with our post-stratification data. The major differences present are that more respondents were Asian and less were other in the post-stratification data compared to the polling data. We also see that ages are slightly different as well, the polling data appeared to collect more responses from younger people while the post-stratification data had a roughly even distribution.</p>
 <div class="figure"><span style="display:block;" id="fig:data2"></span>
-<img src="{{< blogdown/postref >}}index_files/figure-html/data2-1.png" alt="More Demographics of Sample and Population" width="672" />
+<img src="staticdata2-1.png" alt="More Demographics of Sample and Population" width="672" />
 <p class="caption">
 Figure 2: More Demographics of Sample and Population
 </p>
@@ -110,7 +110,7 @@ Joe Biden
 </tbody>
 </table>
 <div class="figure"><span style="display:block;" id="fig:pollmap"></span>
-<img src="{{< blogdown/postref >}}index_files/figure-html/pollmap-1.png" alt="Proportion of voters choosing Biden from Polling Data" width="672" />
+<img src="staticpollmap-1.png" alt="Proportion of voters choosing Biden from Polling Data" width="672" />
 <p class="caption">
 Figure 3: Proportion of voters choosing Biden from Polling Data
 </p>
@@ -1578,7 +1578,7 @@ hispanicnot hispanic
 </table>
 <p>Table <a href="#tab:model">2</a> (below), shows the estimates for the coefficients that will fit into our logistic regression equation. These coefficients will fit into Equation <a href="#eq:logit">(1)</a>, and were calculated using data from the Voter Study Group (<span class="citation"><a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck</a> (<a href="#ref-citeVSG" role="doc-biblioref">2020</a>)</span>). The table is made using <code>kable</code> from <code>knitr</code> (<span class="citation"><a href="#ref-citeKnitr" role="doc-biblioref">Xie</a> (<a href="#ref-citeKnitr" role="doc-biblioref">2020</a>)</span>) and is formatted using <code>kableExtra</code> (<span class="citation"><a href="#ref-citekableExtra" role="doc-biblioref">Zhu</a> (<a href="#ref-citekableExtra" role="doc-biblioref">2020</a>)</span>)<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>. We can see that our p-values for variables like gender, age, hispanic and education return very significant results while the states have varying levels of significance. What our p-values tell us is whether or not our variable is statistically significant in impacting our response variable, in this case, whether the respondent will vote for Biden or not. When we look at our p-values, we want them to be as small as possible and can assume they’re significant if it’s under 0.05. As for the coefficients, the value we receive is in terms of log odds. When the log odds are positive, it means that the person will likely vote for Biden and if it’s negative it means they’ll likely vote for Trump.</p>
 <div class="figure"><span style="display:block;" id="fig:coefficients"></span>
-<img src="{{< blogdown/postref >}}index_files/figure-html/coefficients-1.png" alt="Coefficient Estimates" width="672" />
+<img src="staticcoefficients-1.png" alt="Coefficient Estimates" width="672" />
 <p class="caption">
 Figure 4: Coefficient Estimates
 </p>
@@ -1586,7 +1586,7 @@ Figure 4: Coefficient Estimates
 <p>Figure <a href="#fig:coefficients">4</a> shows us the coefficients that would fit into equation <a href="#eq:logit">(1)</a> using the polling data (<span class="citation"><a href="#ref-citeVSG" role="doc-biblioref">Tausanovitch and Vavreck</a> (<a href="#ref-citeVSG" role="doc-biblioref">2020</a>)</span>). We also have error bars present, which show the upper and lower estimates for the coefficients. What we have to look out for in this scenario is that coefficients with negative values would mean that the person is more likely to vote for Donald Trump (with that characteristic) and positive values mean the person is more likely to vote for Joe Biden. Table <a href="#tab:model">2</a> shows a numerical view of Figure <a href="#fig:coefficients">4</a>, along with p-values.</p>
 <p>Using the outputs of the logistic regression model, we can get an equation that follows the form of <a href="#eq:logit">(1)</a>, but with the <span class="math inline">\(\beta\)</span> values filled out. This equation is difficult to write out because of the many variables, but in short, if the person’s characteristic fits in with a certain variable, it is used in the equation. Then the equation is summed up and the probability is found using equation <a href="#eq:prob">(2)</a>.</p>
 <div class="figure"><span style="display:block;" id="fig:cooks"></span>
-<img src="{{< blogdown/postref >}}index_files/figure-html/cooks-1.png" alt="Cook's Distance Plot for Model" width="672" />
+<img src="staticcooks-1.png" alt="Cook's Distance Plot for Model" width="672" />
 <p class="caption">
 Figure 5: Cook’s Distance Plot for Model
 </p>
@@ -1598,14 +1598,14 @@ Figure 5: Cook’s Distance Plot for Model
 <div id="results" class="section level1">
 <h1>Results</h1>
 <div class="figure"><span style="display:block;" id="fig:stateplot"></span>
-<img src="{{< blogdown/postref >}}index_files/figure-html/stateplot-1.png" alt="Proportion of each State Voting for Biden" width="672" />
+<img src="staticstateplot-1.png" alt="Proportion of each State Voting for Biden" width="672" />
 <p class="caption">
 Figure 6: Proportion of each State Voting for Biden
 </p>
 </div>
 <p>Figure <a href="#fig:stateplot">6</a> shows us the proportion of respondents voting for Joe Biden broken down by state, along with the predicted proportions using MRP. We have also included the errors for each predicted value. We can see that the predicted proportions are fairly close to what the polling data showed. But, we also have to acknowledge the errors present, we can see that many states’ errors cross over the 50% line which could be pivotal for each candidate because of the winner take all nature of the electoral college. We can see that some states like Florida and Georgia have small errors but some states who have very large ones like North Dakota and Wyoming.</p>
 <div class="figure"><span style="display:block;" id="fig:statemap"></span>
-<img src="{{< blogdown/postref >}}index_files/figure-html/statemap-1.png" alt="Proportion of Voters from Each State Voting Joe Biden" width="672" />
+<img src="staticstatemap-1.png" alt="Proportion of Voters from Each State Voting Joe Biden" width="672" />
 <p class="caption">
 Figure 7: Proportion of Voters from Each State Voting Joe Biden
 </p>
@@ -1664,7 +1664,7 @@ Proportion of Vote (%)
 </table>
 <p>Table <a href="#tab:colleges">3</a> shows the lower, mean and upper predictions for the results of the election for Joe Biden. We see that on the lower end, Biden can expect to get 46.1% of the popular vote while only getting 191 electoral colleges. We also see that our middle estimate says Biden will get 51% of the popular vote while still losing the election by getting only 260 colleges. Lastly, on the upper estimate for Biden’s results, he can get 56% of the popular vote while getting 423 colleges! This truly shows how close this election is, as we can see in Figure <a href="#fig:stateplot">6</a>, many states are hovering around the 50% mark, which shows the colleges can go either way. The number of electoral colleges by state were found on the Britannica Encylopedia’s website (<span class="citation"><a href="#ref-colleges" role="doc-biblioref">Encyclopaedia Britannica</a> (<a href="#ref-colleges" role="doc-biblioref">n.d.</a>)</span>).</p>
 <div class="figure"><span style="display:block;" id="fig:votingscales"></span>
-<img src="{{< blogdown/postref >}}index_files/figure-html/votingscales-1.png" alt="Proportion of Biden votes by state" width="672" />
+<img src="staticvotingscales-1.png" alt="Proportion of Biden votes by state" width="672" />
 <p class="caption">
 Figure 8: Proportion of Biden votes by state
 </p>

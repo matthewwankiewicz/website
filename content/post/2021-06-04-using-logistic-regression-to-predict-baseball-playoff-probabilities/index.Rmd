@@ -12,6 +12,10 @@ description: ''
 topics: []
 bibliography: references.bib
 output: blogdown::html_page
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
 ---
 
 Code supporting this analysis can be found at: https://github.com/matthewwankiewicz/moneyball

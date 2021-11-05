@@ -18,6 +18,8 @@ library(tidyverse)
 library(statebins)
 library(broom)
 library(kableExtra)
+
+knitr::opts_chunk$set(echo = TRUE, fig.path = "static")
 ```
 
 ```{r files, echo=F, message=F, warning=F}
