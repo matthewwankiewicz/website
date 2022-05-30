@@ -8,12 +8,16 @@ categories:
 tags:
   - shiny app
   - logistic regression
-description: 'This is a shiny app I created to predict NBA and NFL games. I plan to add tabs for MLB and NHL games as well.'
+description: 'This is a shiny app I created to predict NBA games and various player stats for NBA and MLB players.'
 ---
 
-This app uses logistic regression on various team's stats and determines the probability that the home team will win the game. For NFL games, the model uses offensive and defensive stats for both teams and creates the model. For NBA games, I am using the Four Factors stats, which are advanced stats that display a team's turnover, free throw, rebounding and scoring rates.
+This app uses logistic and linear regressions on various team's stats and determines the probability that the home team will win the game, and the difference in scores. For NBA games, I am using Four Factors stats, which are advanced stats that display a team's turnover, free throw, rebounding and scoring rates. 
 
-For the MLB model, I am using logistic regression on teams hitting stats. I then split up these stats by splits, so if a team is facing a lefty pitcher, the prediction will be made based off of the team's success against lefties. The model will run for both teams against each other and project the winner. I plan to make a blog post for this model and its results...
+There are also tabs for predicting an NBA player's stats vs a given team and a tab that predicts the number of strikeouts a pitcher will get in a start.
+
+The NBA stat simulator uses 10000 Monte Carlo simulations on a player's average stats and then adjusts the value depending on how well the opponent would guard a player of the same position.
+
+The strikeout simulator uses multiple models, including a Linear Mixed Effect model and Poisson model to predict how many strikeouts a player will get against a certain team. The output also includes the number of strikeouts that similar pitchers have gotten against opponents. For example, if we want to see how many strikeouts Kevin Gausman would get vs the Cubs, the page will return the average number of strikeouts recorded by players with similar strikeout and called strike + whiff percentages against Chicago.
 
 ```{r app, echo=FALSE}
 knitr::include_app("https://wnkwz.shinyapps.io/predictors/")
