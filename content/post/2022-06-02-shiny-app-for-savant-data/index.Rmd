@@ -1,0 +1,18 @@
+---
+title: Shiny App for Savant Data
+author: Matthew Wankiewicz
+date: '2022-06-02'
+slug: []
+categories:
+  - baseball
+  - R
+tags:
+  - shiny app
+description: 'This Shiny app uses pitch-by-pitch data from baseballsavant.mlb.com'
+---
+
+So far, the app has data for pitch location, pitch type and result filtered by the pitcher, season and count. Future versions of the app will include the same data but for hitters instead, along with a page including data grouped by team. I also plan to add filters for the speed of pitches and density maps for common areas pitched to or areas where hitters see more success.
+
+```{r app, echo=FALSE}
+knitr::include_app("https://wnkwz.shinyapps.io/pitchtracking/")
+```
