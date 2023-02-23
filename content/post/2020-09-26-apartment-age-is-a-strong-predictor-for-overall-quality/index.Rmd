@@ -31,7 +31,7 @@ Overall this paper focuses on the impact of building age and the score it receiv
 #first we must get the dataset we want
 apt <- search_packages("apartment")
 #find code for package
-package_code <- apt[2,2]
+package_code <- apt[1,2]
 #find resource from resource packages list
 resources <- show_package(package_code) %>% 
   list_package_resources()
@@ -67,8 +67,6 @@ ggplotly(fig1)
 
 <div align="center">
 
-<font size="1"> This graph is interactive! Hover your mouse over the plot or click the legend.</font>
-
 <div align="left">
 
 Figure 1 focuses on the age of apartments. Filtering them by being built before or after 1962, the average year of building for the apartments observed.
@@ -83,8 +81,6 @@ ggplotly(fig2)
 ```
 
 <div align="center">
-
-<font size="1"> This graph is interactive! Hover your mouse over the plot or click the legend.</font>
 
 <div align="left">
 
@@ -102,7 +98,6 @@ ggplotly(boxplot)
 
 <div align="center">
 
-<font size="1"> This graph is interactive! Hover your mouse over the plot.</font>
 
 <div align="left">
 
