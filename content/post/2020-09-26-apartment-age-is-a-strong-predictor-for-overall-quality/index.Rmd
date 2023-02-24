@@ -9,8 +9,6 @@ date: '2020-09-26'
 library(tidyverse)
 #install.packages("opendatatoronto")
 library(opendatatoronto)
-#install.packages("plotly")
-library(plotly)
 
 knitr::opts_chunk$set(echo = TRUE, fig.path = "static")
 ```
@@ -59,12 +57,11 @@ To conduct our study, data was scraped from the City of Toronto's website using 
 
 ```{r, warning=F, message=F,echo=F}
 #Get a plot of the distribution of apartments in wards
-fig1 <- apartmentdata %>% ggplot(aes(WARD)) + 
+apartmentdata %>% ggplot(aes(WARD)) + 
   geom_bar(aes(fill = before_mean), color = "black") +
   labs(x = "Ward", y = "Count", title = "Figure 1: Distribution of Apartments in Wards in Toronto",
        subtitle = "Colors representing the different property types",
        fill = "Property Type")
-ggplotly(fig1)
 ```
 
 <div align="center">
@@ -74,12 +71,11 @@ ggplotly(fig1)
 Figure 1 focuses on the age of apartments. Filtering them by being built before or after 1962, the average year of building for the apartments observed.
 
 ```{r, warning=F, message=F, echo = F}
-fig2 <- apartmentdata %>% ggplot(aes(SCORE)) + 
+apartmentdata %>% ggplot(aes(SCORE)) + 
   geom_bar(aes(fill = factor(before_mean)), color = "black", position = "identity", alpha= 0.6) +
   labs(title = "Figure 2: Distribution of Scores for Apartments in Toronto",
        x = "Score", 
        fill = "Build Year")
-ggplotly(fig2)
 ```
 
 <div align="center">
@@ -90,12 +86,11 @@ This plot shows the distribution of the scores recorded for each apartment while
 
 ```{r, warning = F, message=F, echo=F}
 #create a boxplot with wards as the x-axis and scores as the y-axis
-boxplot <- apartmentdata %>% ggplot(aes(factor(WARD), SCORE)) + 
+apartmentdata %>% ggplot(aes(factor(WARD), SCORE)) + 
   geom_boxplot() + 
   labs(x = "Ward", y = "Score",
        title = "Figure 3: A Boxplot Showing the Relationship between Ward and their Rating") + 
   theme_bw() + geom_hline(yintercept = median(apartmentdata$SCORE), size = 1, alpha = 0.7)
-ggplotly(boxplot)
 ```
 
 <div align="center">
@@ -107,17 +102,16 @@ This plot focuses on where the scores fall in each ward, the thick bar on each b
 
 ```{r, warning=F, message=F, echo=F}
 #create scatterplot with Year built on the x-axis and score on the y-axis
-plot2121 <-  fig4 %>% ggplot(aes(YEAR_BUILT, score)) + geom_point() +
+fig4 %>% ggplot(aes(YEAR_BUILT, score)) + geom_point() +
   labs(title = "Figure 4: Relationship between year built and score", 
        subtitle = "Data grouped by year", 
        x = "Year Built", 
        y = "Score")
-ggplotly(plot2121)
+
 ```
 
 <div align="center">
 
-<font size="1"> This graph is interactive! Hover your mouse over the plot.</font>
 
 <div align="left">
 
