@@ -11,6 +11,8 @@ library(tidyverse)
 library(opendatatoronto)
 #install.packages("plotly")
 library(plotly)
+
+knitr::opts_chunk$set(echo = TRUE, fig.path = "static")
 ```
 
 # Abstract
