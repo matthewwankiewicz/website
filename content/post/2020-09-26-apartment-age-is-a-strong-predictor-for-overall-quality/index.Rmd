@@ -2,6 +2,7 @@
 title: Apartment Age is a Strong Predictor for Overall Quality
 author: Matthew Wankiewicz
 date: '2020-09-26'
+bibliography: 'references.bib'
 ---
 
 ```{r, echo=FALSE, warning=FALSE, message=F}
@@ -143,7 +144,7 @@ When looking to the future and our next steps, most of the tweaks are centred ar
 
 # Citations
 
-This report used: @citetidyverse, @citeggplot2, @citeopendatato, @citeplotly
+This report used: @citetidyverse, @citeggplot2, @citeopendatato
 
 JJ Allaire and Yihui Xie and Jonathan McPherson and Javier Luraschi and Kevin Ushey and Aron Atkins and Hadley Wickham and Joe Cheng and Winston Chang and Richard Iannone (2020). rmarkdown: Dynamic Documents for R. R package version 2.3. URL <https://rmarkdown.rstudio.com>.
 
